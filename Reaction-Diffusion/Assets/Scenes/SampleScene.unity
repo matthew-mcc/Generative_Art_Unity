@@ -227,8 +227,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87905a412da34a04eb3a4888dc5418f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  computeShader: {fileID: 7200000, guid: 0be86e7ae5c256946ae22f46d67239ab, type: 3}
-  renderTexture: {fileID: 0}
 --- !u!1 &1013655709
 GameObject:
   m_ObjectHideFlags: 0
@@ -341,10 +339,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdbe40e5bcd4d7142af14898895dcd4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 1024
-  height: 1024
+  width: 256
+  height: 256
   computeShader: {fileID: 7200000, guid: 8cbd029de7eb9ad45af94f89affd25d5, type: 3}
-  renderTexture: {fileID: 0}
+  deltaTime: 0.1
+  feedRate: 0.0325
+  killRate: 0.062
+  diffusionRateA: 1
+  diffusionRateB: 0.4
 --- !u!4 &1403180294
 Transform:
   m_ObjectHideFlags: 0

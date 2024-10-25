@@ -4,7 +4,9 @@
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
-RWTexture2D<float4> Result;
+RWTexture2D<float4> displayGrid;
+RWTexture2D<float4> currentGrid;
+RWTexture2D<float4> nextGrid;
 
 // Parameters from karl sims (using the Gray-Scott model)
 float deltaTime;
@@ -17,18 +19,136 @@ float killRate;
 float diffusionRateA;
 float diffusionRateB;
 
-
-
-
-
-
-
+// Initialization kernel
 [numthreads(8,8,1)]
 void Start (uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+    if (id.x >= width || id.y >= height){
+        return;
+    }
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+
+    // ============ 3 Diagonal Squares =============
+
+    // Initialize A, B with default values
+    float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
+
+    // Define multiple reaction-diffusion points
+    int2 centers[3] = { int2(width / 2, height / 2), int2(width / 4, height / 4), int2(3 * width / 4, 3 * height / 4) };
+    int regionSize = 5;
+
+    // Check each region for initialization of B concentration
+    for (int i = 0; i < 3; i++) {
+        int centerX = centers[i].x;
+        int centerY = centers[i].y;
+        if ((id.x > centerX - regionSize && id.x < centerX + regionSize) &&
+            (id.y > centerY - regionSize && id.y < centerY + regionSize)) {
+            cell.y = 1.0;  // Initialize B for reaction
+            break;         // Exit once one region is assigned
+        }
+    }
+
+    currentGrid[id.xy] = cell;
+
+    // ============= Single Square =============
+    
+    // Initialize A, B with default values
+    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
+
+    // // Add a small amount of B for reaction to start
+    // int centerX = width / 2;
+    // int centerY = height / 2;
+
+    // if ((id.x > centerX - 15 && id.x < centerX + 15) && (id.y > centerY - 15 && id.y < centerY + 15)) {
+    //     cell.y = 1.0;
+    // }
+
+    // currentGrid[id.xy] = cell;
+    
+
+    // ============ Triangle ============
+    
+    // Initialize cell with A = 1.0 and B = 0.0
+    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
+
+    // // Define center and radius for the circle
+    // int centerX = width / 2;
+    // int centerY = height / 2;
+    // float radius = 15.0; // Radius of the circle
+
+    // // Calculate distance from the center
+    // float distance = length(float2(id.x - centerX, id.y - centerY));
+
+    // // Check if the current pixel is within the circle's radius
+    // if (distance < radius) {
+    //     cell.y = 1.0; // Set B to 1.0 inside the circle
+    // }
+
+    // // Store the cell in the current grid
+    // currentGrid[id.xy] = cell;
+    
+}
+
+float CalculateLaplacianA(int2 id) {
+    // 3x3 convolution weights for Laplacian
+    float4 center = currentGrid[id.xy];
+    float a = center.x;
+    
+    float laplacianA = -a; // Center weight is -1
+    
+    // Define offsets for 3x3 neighborhood
+    int2 offsets[8] = {
+        int2(0, 1),    // up
+        int2(1, 0),    // right
+        int2(0, -1),   // down
+        int2(-1, 0),   // left
+        int2(1, 1),    // up-right
+        int2(-1, 1),   // up-left
+        int2(1, -1),   // down-right
+        int2(-1, -1)   // down-left
+    };
+    
+    float weights[8] = {0.2, 0.2, 0.2, 0.2, 0.05, 0.05, 0.05, 0.05};
+    
+    // Accumulate weighted sum of neighbors
+    for (int i = 0; i < 8; i++) {
+        int2 neighborPos = id + offsets[i];
+        neighborPos = clamp(neighborPos, int2(0, 0), int2(width - 1, height - 1));
+        laplacianA += currentGrid[neighborPos].x * weights[i];
+    }
+
+    return laplacianA;
+}
+
+float CalculateLaplacianB(int2 id) {
+    // 3x3 convolution weights for Laplacian
+    float4 center = currentGrid[id.xy];
+    float b = center.y;
+    
+    float laplacianB = -b; // Center weight is -1
+    
+    // Define offsets for 3x3 neighborhood
+    int2 offsets[8] = {
+        int2(0, 1),    // up
+        int2(1, 0),    // right
+        int2(0, -1),   // down
+        int2(-1, 0),   // left
+        int2(1, 1),    // up-right
+        int2(-1, 1),   // up-left
+        int2(1, -1),   // down-right
+        int2(-1, -1)   // down-left
+    };
+    
+    float weights[8] = {0.2, 0.2, 0.2, 0.2, 0.05, 0.05, 0.05, 0.05};
+    
+    // Accumulate weighted sum of neighbors
+    for (int i = 0; i < 8; i++) {
+        int2 neighborPos = id + offsets[i];
+        neighborPos = clamp(neighborPos, int2(0, 0), int2(width - 1, height - 1));
+        laplacianB += currentGrid[neighborPos].y * weights[i];
+    }
+
+    return laplacianB;
 }
 
 
@@ -36,7 +156,30 @@ void Start (uint3 id : SV_DispatchThreadID)
 [numthreads(8,8,1)]
 void Update (uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+    if (id.x >= width || id.y >= height){
+        return;
+    }
 
-    // Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    float4 cell = currentGrid[id.xy];
+    float a = cell.x;
+    float b = cell.y;
+
+    // Calculate Laplacians for A and B
+    float laplacianA = CalculateLaplacianA(id.xy);
+    float laplacianB = CalculateLaplacianB(id.xy);
+
+    // Gray-Scott reaction-diffusion equations
+    float reaction = a * b * b;
+    float diffA = (diffusionRateA * laplacianA - reaction + feedRate * (1.0 - a));
+    float diffB = (diffusionRateB * laplacianB + reaction - (killRate + feedRate) * b);
+
+    // Update concentrations
+    float newA = a + diffA;
+    float newB = b + diffB;
+    
+
+    nextGrid[id.xy] = float4(max(0, newA), min(newB, 1), diffA, diffB); // Update next grid state
+    displayGrid[id.xy] = nextGrid[id.xy];   // Write to output for visualization
+
+    
 }

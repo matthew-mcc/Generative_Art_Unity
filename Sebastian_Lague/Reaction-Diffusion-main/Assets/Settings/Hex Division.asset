@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Hex Division
   m_EditorClassIdentifier: 
   numStepsPerFrame: 4
-  displayMode: 2
-  initMap: {fileID: 2800000, guid: ea49c45f13d268547b4c8b83af6fd430, type: 3}
+  displayMode: 0
+  initMap: {fileID: 2800000, guid: 6a640056e468aeb419ec3a4995041452, type: 3}
   feedRate: 0.0325
   removeRate: 0.062
   diffuseRateA: 1
