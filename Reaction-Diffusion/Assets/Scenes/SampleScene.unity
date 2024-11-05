@@ -339,8 +339,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdbe40e5bcd4d7142af14898895dcd4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 256
-  height: 256
+  width: 1024
+  height: 1024
   computeShader: {fileID: 7200000, guid: 8cbd029de7eb9ad45af94f89affd25d5, type: 3}
   deltaTime: 0.1
   feedRate: 0.0325

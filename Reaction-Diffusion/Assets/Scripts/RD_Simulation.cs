@@ -84,9 +84,9 @@ public class RD_Simulation : MonoBehaviour
     }
 
     void Display(){
-        computeShader.SetTexture(2, "currentGrid", currentGrid);
-        computeShader.SetTexture(2, "displayGrid", displayGrid);
-        computeShader.Dispatch(2, width/8, height/8, 1);
+        computeShader.SetTexture(1, "currentGrid", currentGrid);
+        computeShader.SetTexture(1, "displayGrid", displayGrid);
+        computeShader.Dispatch(1, width/8, height/8, 1);
     }
 
     // Update is called once per frame
