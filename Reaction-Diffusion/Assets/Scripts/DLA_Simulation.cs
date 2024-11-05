@@ -4,96 +4,154 @@ using UnityEngine;
 
 public class DLA_Simulation : MonoBehaviour
 {
-public int width = 64;
-    public int height = 64;
-    public ComputeShader computeShader;
 
-    public int numCharges = 1;
-    public int numCandidates = 4;
-    public float R1 = 1;
-    public float eta = 0.1f;
-
-    private RenderTexture displayGrid;
-    private ComputeBuffer chargePositionsBuffer;
-    private ComputeBuffer candidatePositionsBuffer;
-    private ComputeBuffer potentialBuffer;
-    private ComputeBuffer growthSiteBuffer;
-
-    private List<Vector3> chargePositions = new List<Vector3>();
-    private List<Vector3> candidatePositions = new List<Vector3>();
-
-    void Start()
+    // Node class represents each point in the cluster
+    private class Node
     {
-        Time.fixedDeltaTime = 1 / 60.0f;
+        public Node parent;
+        public int x, y;
 
-        Initialize();
-        var material = transform.GetComponentInChildren<MeshRenderer>().material;
-        material.mainTexture = displayGrid;
+        public Node(Node parent, int x, int y)
+        {
+            this.parent = parent;
+            this.x = x;
+            this.y = y;
+        }
+
+        // Recursive visit function to update visitation map
+        public void Visit(int[,] map)
+        {
+            map[x, y]++;
+            parent?.Visit(map);
+        }
     }
 
-    void Initialize()
+
+    public int width = 100;      // Width of the grid
+    public int height = 100;     // Height of the grid
+    public int seedCount = 1;    // Initial seed points
+    public bool cyclic = true;   // Enable or disable cyclic boundaries
+    private Node[,] nodes;       // Grid of nodes
+    private int[,] map;          // Grid of visitation counts
+    private int totalNodes;      // Total nodes in the cluster
+    private Texture2D displayTexture; 
+
+
+    private void Start()
     {
-        displayGrid = new RenderTexture(width, height, 24);
-        displayGrid.enableRandomWrite = true;
-        displayGrid.Create();
+        Debug.Log("Starting!");
+        InitializeGrid();
+        PlaceInitialSeeds();
+        CreateDisplayTexture();
+        StartCoroutine(RunSimulation());
+        
+    }
+    // Creates and sets up the display texture
+    private void CreateDisplayTexture()
+    {
+        displayTexture = new Texture2D(width, height);
+        displayTexture.filterMode = FilterMode.Point; // Keep pixels crisp
+        displayTexture.wrapMode = TextureWrapMode.Clamp; // No repeating
 
-        chargePositionsBuffer = new ComputeBuffer(numCharges, sizeof(float) * 3);
-        candidatePositionsBuffer = new ComputeBuffer(numCandidates, sizeof(float) * 3);
-        potentialBuffer = new ComputeBuffer(numCandidates, sizeof(float));
-        growthSiteBuffer = new ComputeBuffer(1, sizeof(float));
-
-        for (int i = 0; i < numCharges; i++)
-            chargePositions.Add(new Vector3(Random.Range(0, width), Random.Range(0, height), 0));
-        for (int i = 0; i < numCandidates; i++)
-            candidatePositions.Add(new Vector3(Random.Range(0, width), Random.Range(0, height), 0));
-
-        chargePositionsBuffer.SetData(chargePositions.ToArray());
-        candidatePositionsBuffer.SetData(candidatePositions.ToArray());
-
-        computeShader.SetInt("numCharges", numCharges);
-        computeShader.SetInt("numCandidates", numCandidates);
-        computeShader.SetFloat("R1", R1);
-        computeShader.SetFloat("eta", eta);
-        computeShader.SetTexture(0, "Result", displayGrid);
-        computeShader.SetBuffer(0, "chargePositions", chargePositionsBuffer);
-        computeShader.SetBuffer(0, "candidatePositions", candidatePositionsBuffer);
-        computeShader.SetBuffer(0, "potentialBuffer", potentialBuffer);
-        computeShader.SetBuffer(0, "growthSiteBuffer", growthSiteBuffer);
-
-        computeShader.Dispatch(0, width / 8, height / 8, 1);
+        // Set the texture to the material
+        var material = GetComponentInChildren<MeshRenderer>().material;
+        material.mainTexture = displayTexture;
     }
 
-    void Simulate()
+    // Initializes the grid with empty nodes and visitation map
+    private void InitializeGrid()
     {
-        computeShader.SetBuffer(1, "chargePositions", chargePositionsBuffer);
-        computeShader.SetBuffer(1, "candidatePositions", candidatePositionsBuffer);
-        computeShader.SetBuffer(1, "potentialBuffer", potentialBuffer);
-        computeShader.Dispatch(1, numCandidates, 1, 1);
-
-        computeShader.SetBuffer(2, "potentialBuffer", potentialBuffer);
-        computeShader.SetBuffer(2, "growthSiteBuffer", growthSiteBuffer);
-        computeShader.Dispatch(2, 1, 1, 1);
-
-        computeShader.SetBuffer(3, "candidatePositions", candidatePositionsBuffer);
-        computeShader.SetBuffer(3, "potentialBuffer", potentialBuffer);
-        computeShader.Dispatch(3, numCandidates, 1, 1);
-
-        float[] growthSiteIndex = new float[1];
-        growthSiteBuffer.GetData(growthSiteIndex);
-        Debug.Log("Selected growth site index: " + growthSiteIndex[0]);
+        nodes = new Node[width, height];
+        map = new int[width, height];
+        totalNodes = seedCount;
     }
 
-    void FixedUpdate()
+    // Places initial seed nodes randomly on the grid
+    private void PlaceInitialSeeds()
     {
-        Simulate();
+        for (int i = 0; i < seedCount; i++)
+        {
+            int x = Random.Range(0, width);
+            int y = Random.Range(0, height);
+            nodes[x, y] = new Node(null, x, y);
+            map[x, y] = 1;
+        }
     }
 
-    private void OnDestroy()
+    // Runs the DLA simulation
+    private IEnumerator RunSimulation()
     {
-        chargePositionsBuffer.Release();
-        candidatePositionsBuffer.Release();
-        potentialBuffer.Release();
-        growthSiteBuffer.Release();
-        displayGrid.Release();
+        while (totalNodes < width * height)
+        {
+            int x = Random.Range(0, width);
+            int y = Random.Range(0, height);
+
+            // If the starting location is already occupied, continue
+            if (nodes[x, y] != null) continue;
+
+            // Perform random walk until a neighboring node is found
+            bool hit = false;
+            while (!hit)
+            {
+                int lastX = x;
+                int lastY = y;
+
+                // Move randomly in a compass direction (N, S, E, W)
+                int direction = Random.Range(0, 4);
+                switch (direction)
+                {
+                    case 0: x += 1; break; // Right
+                    case 1: x -= 1; break; // Left
+                    case 2: y += 1; break; // Up
+                    case 3: y -= 1; break; // Down
+                }
+
+                // Handle grid boundaries
+                if (cyclic)
+                {
+                    x = (x + width) % width;
+                    y = (y + height) % height;
+                }
+                else if (x < 0 || x >= width || y < 0 || y >= height)
+                {
+                    break; // Stop the walk if out of bounds in non-cyclic mode
+                }
+
+                // Check if the location is occupied by a node
+                if (nodes[x, y] != null)
+                {
+                    hit = true;
+                    Node newNode = new Node(nodes[x, y], lastX, lastY);
+                    nodes[lastX, lastY] = newNode;
+                    newNode.Visit(map);
+                    totalNodes++;
+                }
+
+                yield return null; // Wait for the next frame to continue
+            }
+            UpdateTexture();
+        }
+
+        Debug.Log("Simulation complete!");
+
     }
+
+    // Updates the display texture based on the map array
+    private void UpdateTexture()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                // Set color based on whether the point is occupied
+                Color color = map[x, y] > 0 ? Color.white : Color.black;
+                displayTexture.SetPixel(x, y, color);
+            }
+        }
+
+        // Apply changes to update the texture
+        displayTexture.Apply();
+    }
+
+
 }
