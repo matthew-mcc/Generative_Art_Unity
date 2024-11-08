@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="Container" style="flex-grow: 1; align-self: auto;">
+        <ui:Label tabindex="-1" text="Simulation Controls&#10;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Title" style="align-self: flex-end;" />
+        <ui:DropdownField label="Model" choices="Reaction-Diffusion, Laplacian-Growth" name="DropdownField" style="align-self: flex-end;" />
+    </ui:VisualElement>
+</ui:UXML>
