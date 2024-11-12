@@ -28,6 +28,10 @@ public class Fast_Laplacian : MonoBehaviour
     public int maxIterations = 1000;
     int iterations = 0;
 
+
+    // Simulation Controls
+    public Simulation_Handler sim;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -199,14 +203,18 @@ public class Fast_Laplacian : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (iterations >= maxIterations){
+        
+        if (sim.isSimulationRunning){
+            if (iterations >= maxIterations){
             Debug.Log("Maxed out!");
+            }
+            else{
+                IterateAlgorithm();
+                iterations++;
+                UpdateTexture();   
+            }
         }
-        else{
-            IterateAlgorithm();
-            iterations++;
-            UpdateTexture();   
-        }
+        
         
     }
 

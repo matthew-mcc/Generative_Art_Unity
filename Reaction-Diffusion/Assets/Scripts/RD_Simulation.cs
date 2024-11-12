@@ -21,6 +21,11 @@ public class RD_Simulation : MonoBehaviour
 
     bool updateDisplay = true;
 
+
+    // Simulation Control things
+
+    public Simulation_Handler sim;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -88,15 +93,20 @@ public class RD_Simulation : MonoBehaviour
         computeShader.SetTexture(1, "displayGrid", displayGrid);
         computeShader.Dispatch(1, width/8, height/8, 1);
     }
-
+    
     // Update is called once per frame
     void FixedUpdate()
     {
-        for (int i = 0; i < 4; i++){
-            Simulate();
+
+        // Only run if simulation controls tell us we can
+        if (sim.isSimulationRunning){
+            for (int i = 0; i < 4; i++){
+                Simulate();
+            }
+            
+            updateDisplay = true;
         }
-        
-        updateDisplay = true;
+
 
     }
 
