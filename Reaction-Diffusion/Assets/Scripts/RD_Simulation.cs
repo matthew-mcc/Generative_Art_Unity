@@ -26,11 +26,35 @@ public class RD_Simulation : MonoBehaviour
 
     public Simulation_Handler sim;
 
+    public void ResetSimulation(){
+        // Clear the current grid and next grid by reinitializing them
+        if (currentGrid != null) currentGrid.Release();
+        if (nextGrid != null) nextGrid.Release();
+
+        currentGrid = new RenderTexture(width, height, 24);
+        currentGrid.enableRandomWrite = true;
+        currentGrid.Create();
+
+        nextGrid = new RenderTexture(width, height, 24);
+        nextGrid.enableRandomWrite = true;
+        nextGrid.Create();
+
+        // Reset compute shader textures to the newly created grids
+        computeShader.SetTexture(0, "currentGrid", currentGrid);
+        computeShader.SetTexture(0, "nextGrid", nextGrid);
+        computeShader.SetTexture(0, "displayGrid", displayGrid);
+
+        // Reapply initial shader parameters and dispatch the compute shader to reset
+        UpdateShaderParameters();
+        computeShader.Dispatch(0, width / 8, height / 8, 1);
+        updateDisplay = true;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
 
-        Time.fixedDeltaTime = 1 / 60.0f;
+        // Time.fixedDeltaTime = 1 / 60.0f; <-- Now handled in Simulation_Handler
 
         
         Initialize();

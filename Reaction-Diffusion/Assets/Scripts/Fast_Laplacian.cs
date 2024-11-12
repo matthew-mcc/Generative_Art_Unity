@@ -32,6 +32,24 @@ public class Fast_Laplacian : MonoBehaviour
     // Simulation Controls
     public Simulation_Handler sim;
 
+    public void ResetSimulation(){
+        if (renderTexture != null) renderTexture.Release();
+        InitializeComputeShader();
+
+        var material = transform.GetComponentInChildren<MeshRenderer>().material;
+        material.mainTexture = renderTexture;
+
+        InitializeAlgorithm();
+
+        iterations = 0;
+
+        if (aggregateBuffer != null) aggregateBuffer.Release();
+
+        UpdateTexture();
+        
+
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -41,13 +59,14 @@ public class Fast_Laplacian : MonoBehaviour
         var material = transform.GetComponentInChildren<MeshRenderer>().material;
         material.mainTexture = renderTexture;
 
-        Time.fixedDeltaTime = 1 / 240f;
+        // Time.fixedDeltaTime = 1 / 240f; <-- Now handled in Simulation_Handler
         
     }
 
     private void InitializeComputeShader()
     {
-        // throw new NotImplementedException();
+        
+        
         renderTexture = new RenderTexture(width, height, 24);
         renderTexture.enableRandomWrite = true;
         renderTexture.Create();
@@ -64,25 +83,24 @@ public class Fast_Laplacian : MonoBehaviour
 
     private void InitializeAlgorithm()
     {
-        // // INITIALIZE DISPLAY TEXTURE
-        // displayTexture = new Texture2D(width, height);
-        // displayTexture.filterMode = FilterMode.Point; // Keep pixels crisp
-        // displayTexture.wrapMode = TextureWrapMode.Clamp; // No repeating
-
-        // Set the texture to the material
-        // var material = GetComponentInChildren<MeshRenderer>().material;
-        // material.mainTexture = displayTexture;
 
         // INITIALIZE ALGORITHM
         aggregateMap = new int[width, height];
-        aggregateMap[width/2, height/2] = 1; // Initial Seed
+        int initialSeedX = UnityEngine.Random.Range(0, width);
+        int initialSeedY = UnityEngine.Random.Range(0, height);
+        
+        // Alternatively, guarantee one seed in the center
+        // int initialSeedX = width / 2;
+        // int initialSeedY = height / 2;
+
+        aggregateMap[initialSeedX, initialSeedY] = 1; // Initial seed
 
         candidateSites = new Dictionary<Vector2Int, float>();
         pointCharges = new List<Vector2Int>();
 
         // Add candidates for the initial seed 
-        Dictionary<Vector2Int, float> newCandidateSites = AddCandidateSites(new Vector2Int(width / 2, height / 2));
-        pointCharges.Add(new Vector2Int(width/2, height/2));
+        Dictionary<Vector2Int, float> newCandidateSites = AddCandidateSites(new Vector2Int(initialSeedX, initialSeedY));
+        pointCharges.Add(new Vector2Int(initialSeedX, initialSeedY));
 
         // Calculate Potentials
         CalculatePotentials(new List<Vector2Int>(newCandidateSites.Keys));
