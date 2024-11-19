@@ -8,6 +8,8 @@ RWTexture2D<float4> displayGrid;
 RWTexture2D<float4> currentGrid;
 RWTexture2D<float4> nextGrid;
 
+Texture2D<float4> initMap;
+
 // Parameters from karl sims (using the Gray-Scott model)
 float deltaTime;
 int width;
@@ -19,6 +21,8 @@ float killRate;
 float diffusionRateA;
 float diffusionRateB;
 
+int colorMode;
+
 // Initialization kernel
 [numthreads(8,8,1)]
 void Start (uint3 id : SV_DispatchThreadID)
@@ -27,43 +31,45 @@ void Start (uint3 id : SV_DispatchThreadID)
         return;
     }
 
-
+    // This works, need to create some initial maps tho...
+    float4 initVals = initMap[id.xy];
+    currentGrid[id.xy] = float4(1, initVals.r, 0, 0);
     // ============ 3 Diagonal Squares =============
 
     // Initialize A, B with default values
-    float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
+    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
 
-    // Define multiple reaction-diffusion points
-    int2 centers[3] = { int2(width / 2, height / 2), int2(width / 4, height / 4), int2(3 * width / 4, 3 * height / 4) };
-    int regionSize = 5;
+    // // Define multiple reaction-diffusion points
+    // int2 centers[3] = { int2(width / 2, height / 2), int2(width / 4, height / 4), int2(3 * width / 4, 3 * height / 4) };
+    // int regionSize = 5;
 
-    // Check each region for initialization of B concentration
-    for (int i = 0; i < 3; i++) {
-        int centerX = centers[i].x;
-        int centerY = centers[i].y;
-        if ((id.x > centerX - regionSize && id.x < centerX + regionSize) &&
-            (id.y > centerY - regionSize && id.y < centerY + regionSize)) {
-            cell.y = 1.0;  // Initialize B for reaction
-            break;         // Exit once one region is assigned
-        }
-    }
+    // // Check each region for initialization of B concentration
+    // for (int i = 0; i < 3; i++) {
+    //     int centerX = centers[i].x;
+    //     int centerY = centers[i].y;
+    //     if ((id.x > centerX - regionSize && id.x < centerX + regionSize) &&
+    //         (id.y > centerY - regionSize && id.y < centerY + regionSize)) {
+    //         cell.y = 1.0;  // Initialize B for reaction
+    //         break;         // Exit once one region is assigned
+    //     }
+    // }
 
-    currentGrid[id.xy] = cell;
+    // currentGrid[id.xy] = cell;
 
     // ============= Single Square =============
     
     // Initialize A, B with default values
-    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
+    float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
 
-    // // Add a small amount of B for reaction to start
-    // int centerX = width / 2;
-    // int centerY = height / 2;
+    // Add a small amount of B for reaction to start
+    int centerX = width / 2;
+    int centerY = height / 2;
 
-    // if ((id.x > centerX - 15 && id.x < centerX + 15) && (id.y > centerY - 15 && id.y < centerY + 15)) {
-    //     cell.y = 1.0;
-    // }
+    if ((id.x > centerX - 15 && id.x < centerX + 15) && (id.y > centerY - 15 && id.y < centerY + 15)) {
+        cell.y = 1.0;
+    }
 
-    // currentGrid[id.xy] = cell;
+    currentGrid[id.xy] = cell;
     
 
     // ============ Triangle ============
@@ -177,9 +183,43 @@ void Update (uint3 id : SV_DispatchThreadID)
     float newA = a + diffA;
     float newB = b + diffB;
     
+    // Testing out colors
 
     nextGrid[id.xy] = float4(max(0, newA), min(newB, 1), diffA, diffB); // Update next grid state
-    displayGrid[id.xy] = nextGrid[id.xy];   // Write to output for visualization
+
+    float colorA = nextGrid[id.xy].x;
+    float colorB = nextGrid[id.xy].y;
+    float colorW = nextGrid[id.xy].w;
+    float colorZ = nextGrid[id.xy].z;
+    
+    // Standard
+    if (colorMode == 0){
+        displayGrid[id.xy] = nextGrid[id.xy];
+    }
+
+    // Black and White
+    else if (colorMode == 1){
+        displayGrid[id.xy] = colorA - colorB;
+    }
+
+    // Sebastian Lague Color
+    else if (colorMode == 2){
+        float v = colorA - colorB;
+
+        displayGrid[id.xy] = (1 - pow(abs(1 - (v + 1 - max(colorW, colorZ) * 350)), 0.6)) + float4(colorW, 0, 0, 0) * 400;
+    }
+
+    // Sebastian Lague Color 2.0
+    else if (colorMode == 3){
+        float4 col = float4(colorZ * 350, colorW * 250, 0, 0) + float4(0, 0, colorB, 0);
+        col = col.gbra;
+        col.g = pow(col.g, 2) * 6;
+        col = min(1, max(0, col));
+        displayGrid[id.xy] = col;
+    }
+
+    // displayGrid[id.xy] = nextGrid[id.xy];   // Write to output for visualization
+    
 
     
 }

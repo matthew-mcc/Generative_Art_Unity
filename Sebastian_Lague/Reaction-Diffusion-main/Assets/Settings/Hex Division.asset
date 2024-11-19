@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d85e0c0abf419d4409a4a345eebbf59d, type: 3}
   m_Name: Hex Division
   m_EditorClassIdentifier: 
-  numStepsPerFrame: 4
+  numStepsPerFrame: 16
   displayMode: 0
-  initMap: {fileID: 2800000, guid: 6a640056e468aeb419ec3a4995041452, type: 3}
+  initMap: {fileID: 2800000, guid: 002c4f03d1c2fb34aa68557587d5b13b, type: 3}
   feedRate: 0.0325
   removeRate: 0.062
   diffuseRateA: 1

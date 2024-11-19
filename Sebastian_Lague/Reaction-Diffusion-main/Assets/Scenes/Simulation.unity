@@ -240,7 +240,7 @@ MonoBehaviour:
   compute: {fileID: 7200000, guid: 141e2e196efdf4d47bd36b0f5db4eae9, type: 3}
   settings: {fileID: 11400000, guid: 44d4c15965c023a478e4baf188268af5, type: 2}
   filterMode: 1
-  format: 48
+  format: 46
 --- !u!4 &1531495863
 Transform:
   m_ObjectHideFlags: 0
