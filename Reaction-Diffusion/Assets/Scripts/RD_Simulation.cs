@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class RD_Simulation : MonoBehaviour
 {
@@ -18,7 +19,7 @@ public class RD_Simulation : MonoBehaviour
 
     private RenderTexture currentGrid;
     private RenderTexture nextGrid;
-    private RenderTexture displayGrid;
+    public RenderTexture displayGrid;
 
     public Texture2D initMap; // todo
 
@@ -169,37 +170,52 @@ public class RD_Simulation : MonoBehaviour
         }
 
         // Close but no cigar
-        if(Input.GetKeyDown(KeyCode.Space)){
-            // // Set the RenderTexture we want to read from
-            // RenderTexture renderTexture = displayGrid;
-            // RenderTexture.active = renderTexture;
+        // if(Input.GetKeyDown(KeyCode.Space)){
+            
+        //     RenderTexture rt = displayGrid;
+        //     RenderTexture.active = rt;
+        //     Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
+        //     tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+        //     RenderTexture.active = null;
 
-            // // Ensure the GPU has finished all commands
+        //     byte[] bytes;
+        //     bytes = tex.EncodeToPNG();
+
+        //     string path = "Output_Images/Test.png";
+        //     System.IO.File.WriteAllBytes(path, bytes);
+
+
+
+        //     // // Set the RenderTexture we want to read from
+        //     // RenderTexture renderTexture = displayGrid;
+        //     // RenderTexture.active = renderTexture;
+
+        //     // // Ensure the GPU has finished all commands
             
 
-            // // Create a new Texture2D with the same dimensions and format as the RenderTexture
-            // Texture2D tex2D = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGBA32, false);
+        //     // // Create a new Texture2D with the same dimensions and format as the RenderTexture
+        //     // Texture2D tex2D = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGBA32, false);
 
-            // // Read the pixels from the currently active RenderTexture
-            // tex2D.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-            // tex2D.Apply();
+        //     // // Read the pixels from the currently active RenderTexture
+        //     // tex2D.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+        //     // tex2D.Apply();
 
-            // // Encode to PNG (or JPG)
-            // byte[] bytes = tex2D.EncodeToPNG(); // Use EncodeToJPG for JPG output
-            // string filePath = Path.Combine(Application.dataPath, "Output_Images/Test.png");
+        //     // // Encode to PNG (or JPG)
+        //     // byte[] bytes = tex2D.EncodeToPNG(); // Use EncodeToJPG for JPG output
+        //     // string filePath = Path.Combine(Application.dataPath, "Output_Images/Test.png");
 
-            // // Ensure the directory exists
-            // Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+        //     // // Ensure the directory exists
+        //     // Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
-            // // Write the file
-            // File.WriteAllBytes(filePath, bytes);
+        //     // // Write the file
+        //     // File.WriteAllBytes(filePath, bytes);
 
-            // Debug.Log($"Image saved to {filePath}");
+        //     // Debug.Log($"Image saved to {filePath}");
 
-            // // Clean up
-            // RenderTexture.active = null;
-            // Destroy(tex2D);
-        }
+        //     // // Clean up
+        //     // RenderTexture.active = null;
+        //     // Destroy(tex2D);
+        // }
     }
     
 }

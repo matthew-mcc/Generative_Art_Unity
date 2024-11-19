@@ -34,7 +34,6 @@ public class Simulation_Handler : MonoBehaviour
     public TMP_Text diffuseRateASlider_Text;
     public Slider diffuseRateBSlider;
     public TMP_Text diffuseRateBSlider_Text;
-    
 
     // 0 for RD, 1 for L_G
     int currentModel;
@@ -143,6 +142,44 @@ public class Simulation_Handler : MonoBehaviour
         }
         
 
+    }
+
+    public void SaveImage(){
+
+        // Pause simulation, so they know what image they are getting!
+        if (isSimulationRunning){
+            isSimulationRunning = false;
+            
+        }
+
+        DateTime dt = DateTime.Now;
+        string outputPath = "Output_Images/" + dt.ToString("yyyy-MM-dd_HH-mm-ss");
+        
+
+        RenderTexture rt = rD.GetComponent<RD_Simulation>().displayGrid; // Default to RD so unity doesn't complain
+
+        if (currentModel == 0){
+            outputPath += "_Reaction_Diffusion" + ".png";
+            rt = rD.GetComponent<RD_Simulation>().displayGrid;
+        }
+
+        else if (currentModel == 1){
+            outputPath += "_Laplacian_Growth" + ".png";
+            rt = fast_Laplacian.GetComponent<Fast_Laplacian>().renderTexture;
+        }
+
+        // Everything else is not specific to model.
+        RenderTexture.active = rt;
+        Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
+        tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+        RenderTexture.active = null;
+
+        byte[] bytes;
+        bytes = tex.EncodeToPNG();
+        System.IO.File.WriteAllBytes(outputPath, bytes);
+     
+
+        Debug.Log($"Image Saved to: {outputPath}");
     }
 
     // ============================== RD Controls ==============================

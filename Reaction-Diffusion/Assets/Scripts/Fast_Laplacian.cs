@@ -10,7 +10,7 @@ public class Fast_Laplacian : MonoBehaviour
 
     // private Texture2D displayTexture;
 
-    private RenderTexture renderTexture; 
+    public RenderTexture renderTexture; 
     public ComputeShader computeShader;
     private int[] aggregateMap1D; 
     private ComputeBuffer aggregateBuffer;
