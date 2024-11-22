@@ -35,6 +35,12 @@ public class Simulation_Handler : MonoBehaviour
     public Slider diffuseRateBSlider;
     public TMP_Text diffuseRateBSlider_Text;
 
+    // Laplacian Specific Controls
+    public Slider etaSlider;
+    public TMP_Text etaSlider_Text;
+    public Slider R1Slider;
+    public TMP_Text R1Slider_Text;
+
     // 0 for RD, 1 for L_G
     int currentModel;
 
@@ -51,7 +57,7 @@ public class Simulation_Handler : MonoBehaviour
         Time.fixedDeltaTime = dt;
     }
 
-    private void Update() {
+    private void FixedUpdate() {
 
 
         if (isSimulationRunning){
@@ -139,6 +145,8 @@ public class Simulation_Handler : MonoBehaviour
             isSimulationRunning = false;
             rdControls.SetActive(false);
             laplacianControls.SetActive(true);
+            dtSlider.value = 45f;
+            dtSliderText.text = string.Format("FPS: {0}", (int)45f);
         }
         
 
@@ -278,6 +286,25 @@ public class Simulation_Handler : MonoBehaviour
 
     // ============================== Laplacian Controls ==============================
 
+    public void ChangeEta(){
+        float newEta = etaSlider.value;
+        etaSlider_Text.text = string.Format("eta: {0:F3}", (float)newEta);
+
+        fast_Laplacian.GetComponent<Fast_Laplacian>().eta = newEta;
+        
+        Regrow();
+    }
+
+    public void ChangeR1(){
+        float newR1 = R1Slider.value;
+        R1Slider_Text.text = string.Format("R1: {0:F3}", (float)newR1);
+
+        fast_Laplacian.GetComponent<Fast_Laplacian>().R1 = newR1;
+
+        Regrow();
+    }
+
+    
     
 
 
