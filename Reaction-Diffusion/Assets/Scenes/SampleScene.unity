@@ -3086,7 +3086,8 @@ MonoBehaviour:
   diffusionRateB: 0.4
   displayGrid: {fileID: 0}
   initMap: {fileID: 2800000, guid: ad843a75b3fa7aa41b1c4bf79f975cd5, type: 3}
-  colorMode: 3
+  colorMode: 1
+  orientationDirection: 3
   sim: {fileID: 1081651947}
 --- !u!1 &562773455
 GameObject:
@@ -6115,6 +6116,7 @@ MonoBehaviour:
   displayGrid: {fileID: 0}
   initMap: {fileID: 0}
   colorMode: 0
+  orientationDirection: 0
   sim: {fileID: 1081651947}
 --- !u!4 &1403180294
 Transform:

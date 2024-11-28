@@ -4,9 +4,10 @@
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
-RWTexture2D<float4> displayGrid;
+
 RWTexture2D<float4> currentGrid;
 RWTexture2D<float4> nextGrid;
+RWTexture2D<float4> displayGrid;
 
 Texture2D<float4> initMap;
 
@@ -22,6 +23,18 @@ float diffusionRateA;
 float diffusionRateB;
 
 int colorMode;
+
+// (1, 0) means we will bias to the right
+// (0, 1) means we will bias downward
+// (1, 1) means we will bias diagonally
+
+// 0 Means no orientation change
+// 1 --> (1, 0)
+// 2 --> (0, 1)
+// 3 --> (1, 1)
+int orientationDirection = 0; 
+float2 diffusionDirection = float2(1, 1);
+
 
 // Initialization kernel
 [numthreads(8,8,1)]
@@ -56,6 +69,23 @@ void Start (uint3 id : SV_DispatchThreadID)
 
     // currentGrid[id.xy] = cell;
 
+    // ============= Single Circle =============
+    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
+
+    // // Add a small amount of B for reaction to start
+    // float centerX = width / 2.0; // Ensure floating-point division
+    // float centerY = height / 2.0; // Ensure floating-point division
+    // float radius = 15.0;
+
+    // float dx = id.x - centerX; // id.x and id.y need to be treated as floats
+    // float dy = id.y - centerY;
+
+    // // Check if the cell is within the circle
+    // if ((dx * dx) + (dy * dy) < (radius * radius)) {
+    //     cell.y = 1.0;
+    // }
+
+    // currentGrid[id.xy] = cell;
     // ============= Single Square =============
     
     // Initialize A, B with default values
@@ -119,8 +149,10 @@ float CalculateLaplacianA(int2 id) {
     // Accumulate weighted sum of neighbors
     for (int i = 0; i < 8; i++) {
         int2 neighborPos = id + offsets[i];
+        float sqrDst = offsets[i].x * offsets[i].x * offsets[i].y * offsets[i].y;
         neighborPos = clamp(neighborPos, int2(0, 0), int2(width - 1, height - 1));
         laplacianA += currentGrid[neighborPos].x * weights[i];
+        
     }
 
     return laplacianA;
@@ -166,9 +198,9 @@ void Update (uint3 id : SV_DispatchThreadID)
         return;
     }
 
-    float4 cell = currentGrid[id.xy];
-    float a = cell.x;
-    float b = cell.y;
+    float2 currentValues = currentGrid[id.xy].xy;
+    float a = currentValues.x;
+    float b = currentValues.y;
 
     // Calculate Laplacians for A and B
     float laplacianA = CalculateLaplacianA(id.xy);
@@ -186,6 +218,40 @@ void Update (uint3 id : SV_DispatchThreadID)
     // Testing out colors
 
     nextGrid[id.xy] = float4(max(0, newA), min(newB, 1), diffA, diffB); // Update next grid state
+
+    // float2 diffuseStrength = 0;
+
+    // float2 sum = 0;
+    // float weightSum;
+    // int diffuseRadius = 6;
+    // for(int offsetY = -diffuseRadius; offsetY <= diffuseRadius; offsetY ++ ){
+    //     for (int offsetX = -diffuseRadius; offsetX <= diffuseRadius; offsetX ++){
+    //         if (offsetX == 0 && offsetY == 0){
+    //             continue;
+    //         }
+    //         int2 samplePos = id.xy + int2(offsetX, offsetY);
+    //         samplePos = min(int2(width-1, height-1), max(0, samplePos));
+    //         float sqrDst = offsetX * offsetX * offsetY * offsetY;
+
+    //         if (sqrDst <= diffuseRadius * diffuseRadius){
+    //             float weight = 1.0 / sqrt(sqrDst);
+    //             sum += currentGrid[samplePos].xy * weight;
+    //             weightSum += weight;
+    //         }
+    //     }
+    // }
+
+    // diffuseStrength = sum / weightSum - currentValues;
+
+    // float deltaA = (diffusionRateA * diffuseStrength.x - a * b * b + feedRate * (1-a));
+	// float newA = a + deltaA;
+
+	// float deltaB = (diffusionRateB * diffuseStrength.y + a * b * b - (killRate + feedRate) * b);
+	// float newB = b + deltaB;
+
+    // nextGrid[id.xy] = float4(max(0, newA), min(newB, 1), deltaA, deltaB); // Update next grid state
+
+    
 
     float colorA = nextGrid[id.xy].x;
     float colorB = nextGrid[id.xy].y;

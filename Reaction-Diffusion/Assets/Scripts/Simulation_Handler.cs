@@ -145,8 +145,8 @@ public class Simulation_Handler : MonoBehaviour
             isSimulationRunning = false;
             rdControls.SetActive(false);
             laplacianControls.SetActive(true);
-            dtSlider.value = 45f;
-            dtSliderText.text = string.Format("FPS: {0}", (int)45f);
+            dtSlider.value = 30f;
+            dtSliderText.text = string.Format("FPS: {0}", (int)30f);
         }
         
 

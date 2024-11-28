@@ -26,6 +26,7 @@ public class RD_Simulation : MonoBehaviour
     bool updateDisplay = true;
 
     public int colorMode = 0;
+    public int orientationDirection = 0; // 0, 1, 2, 3
 
 
     // Simulation Control things
@@ -103,6 +104,7 @@ public class RD_Simulation : MonoBehaviour
         computeShader.SetTexture(0, "currentGrid", currentGrid);
         computeShader.SetTexture(0, "nextGrid", nextGrid);
         computeShader.SetTexture(0, "initMap", initMap);
+        computeShader.SetInt("orientationDirection", orientationDirection);
         computeShader.Dispatch(0, width / 8, height / 8, 1);
 
         
@@ -118,6 +120,7 @@ public class RD_Simulation : MonoBehaviour
         computeShader.SetFloat("killRate", killRate);
         computeShader.SetFloat("diffusionRateA", diffusionRateA);
         computeShader.SetFloat("diffusionRateB", diffusionRateB);
+        computeShader.SetInt("orientationDirection", orientationDirection);
     }
     
     void Simulate(){
@@ -137,6 +140,7 @@ public class RD_Simulation : MonoBehaviour
         computeShader.SetTexture(1, "currentGrid", currentGrid);
         computeShader.SetTexture(1, "displayGrid", displayGrid);
         computeShader.Dispatch(1, width/8, height/8, 1);
+        
     }
     
     // Update is called once per frame

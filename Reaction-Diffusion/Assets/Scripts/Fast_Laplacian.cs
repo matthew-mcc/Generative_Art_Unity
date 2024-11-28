@@ -117,10 +117,6 @@ public class Fast_Laplacian : MonoBehaviour
         int initialSeedX = UnityEngine.Random.Range(0, width);
         int initialSeedY = UnityEngine.Random.Range(0, height);
         
-        // Alternatively, guarantee one seed in the center
-        // int initialSeedX = width / 2;
-        // int initialSeedY = height / 2;
-
         aggregateMap[initialSeedX, initialSeedY] = 1; // Initial seed
 
         candidateSites = new Dictionary<Vector2Int, float>();
@@ -172,7 +168,9 @@ public class Fast_Laplacian : MonoBehaviour
                 float potentialContribution = 1 - (R1 / distance);
 
                 // Update the potential at the candidate site using φ_i^{t+1} = φ_i^t + (1 - R1 / r)
+                
                 candidateSites[site] += potentialContribution;
+                
             }
         }
     }
@@ -223,6 +221,7 @@ public class Fast_Laplacian : MonoBehaviour
         // return candidateSites.Keys.First();
         return candidateSite;
     }
+    
 
 
     // Eqn 3 or 10, based on paper version.
@@ -241,6 +240,9 @@ public class Fast_Laplacian : MonoBehaviour
                 }
             }
 
+            // === This sorta works ===
+            // float directionalBias = Mathf.Lerp(0.5f, 1.5f, (float)site.x / width); // Bias grows toward the right
+            // phi *= directionalBias; // Amplify potential based on bias
 
             candidateSites[site] = phi;
         }
