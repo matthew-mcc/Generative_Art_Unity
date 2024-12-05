@@ -89,17 +89,17 @@ void Start (uint3 id : SV_DispatchThreadID)
     // ============= Single Square =============
     
     // Initialize A, B with default values
-    float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
+    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
 
-    // Add a small amount of B for reaction to start
-    int centerX = width / 2;
-    int centerY = height / 2;
+    // // Add a small amount of B for reaction to start
+    // int centerX = width / 2;
+    // int centerY = height / 2;
 
-    if ((id.x > centerX - 15 && id.x < centerX + 15) && (id.y > centerY - 15 && id.y < centerY + 15)) {
-        cell.y = 1.0;
-    }
+    // if ((id.x > centerX - 15 && id.x < centerX + 15) && (id.y > centerY - 15 && id.y < centerY + 15)) {
+    //     cell.y = 1.0;
+    // }
 
-    currentGrid[id.xy] = cell;
+    // currentGrid[id.xy] = cell;
     
 
     // ============ Triangle ============

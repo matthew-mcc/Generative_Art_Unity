@@ -56,6 +56,8 @@ public class Fast_Laplacian : MonoBehaviour
     public int maxIterations = 1000;
     int iterations = 0;
 
+    int seedX = 200;
+    int seedY = 200;
     bool needsDisplayUpdate = true;
     // Simulation Controls
     public Simulation_Handler sim;
@@ -102,6 +104,19 @@ public class Fast_Laplacian : MonoBehaviour
         computeShader.SetInt("width", width);
         computeShader.SetInt("height", height);
 
+        computeShader.SetInt("seedX", seedX);
+        computeShader.SetInt("seedY", seedY);
+        // computeShader.SetVector("colorA", new Vector4(1f, 0f, 0f, 1f)); // Example red
+        // computeShader.SetVector("colorB", new Vector4(0f, 0f, 1f, 1f)); // Example blue
+        // computeShader.SetVector("colorA", new Vector4(0.5f, 0f, 0.5f, 1f)); // Purple
+        // computeShader.SetVector("colorB", new Vector4(0f, 1f, 0f, 1f));     // Green
+        computeShader.SetVector("colorB", new Vector4(1f, 0f, 0f, 1f)); // Red
+        computeShader.SetVector("colorA", new Vector4(1f, 1f, 0f, 1f)); // Yellow
+
+
+        computeShader.SetFloat("colorW", 0.5f);
+        computeShader.SetFloat("colorZ", 0.2f);
+        
         computeShader.SetTexture(0, "Result", renderTexture);
         computeShader.Dispatch(0, width / 8, height / 8, 1);
 
@@ -114,9 +129,13 @@ public class Fast_Laplacian : MonoBehaviour
 
         // INITIALIZE ALGORITHM
         aggregateMap = new int[width, height];
-        int initialSeedX = UnityEngine.Random.Range(0, width);
-        int initialSeedY = UnityEngine.Random.Range(0, height);
         
+        // int initialSeedX = UnityEngine.Random.Range(0, width);
+        // int initialSeedY = UnityEngine.Random.Range(0, height);
+        
+        int initialSeedX = 200;
+        int initialSeedY = 200;
+
         aggregateMap[initialSeedX, initialSeedY] = 1; // Initial seed
 
         candidateSites = new Dictionary<Vector2Int, float>();
