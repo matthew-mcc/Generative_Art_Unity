@@ -7,212 +7,150 @@ using UnityEngine;
 
 
 
-class Particle{
-    public Vector2 position;
-    public Vector2 velocity;
-    SpriteRenderer spriteRenderer;
-    float repulusionDistance = 5f;
-    float k = 0.0001f;
-
-    // public Particle(float x, float y, SpriteRenderer sr){
-    public Particle(float x, float y){
-        position = new Vector2(x, y);
-        velocity = new Vector2(0, 0);
-        // circle = circ;
-        // spriteRenderer = sr;
-        
-
-        
-        
-
-    }
-    public void update(List<Particle> c, int n){
-        Vector2 diff = new Vector2(0, 0);
-        Vector2 forces = new Vector2(0, 0);
-        float distance;
-
-        foreach(Particle p in c){
-            if(p != this){
-                diff = p.position - position;
-                distance = diff.magnitude;
-
-                if (distance < repulusionDistance){
-                    diff.Normalize();
-                    diff = diff * -1 / (distance * distance);
-                    // forces.
-                    forces += diff;
-                }
-            }
-        }
-
-        // For mass 1, this is unecessary
-        // Vector2 acceleration = new Vector2(0, 0);
-        // acceleration = forces;
-        // acceleration = acceleration / 1;
-        // velocity += acceleration;
-        int neighbor = (n + 1) % c.Count;
-        Particle temp = c[neighbor];
-        diff = temp.position - position;
-        distance = diff.magnitude;
-        diff.Normalize();
-        diff = diff * -1 / (distance*distance);
-        if (distance < 0.5f){ //0.5f == insertDistance / 2 (NEED TO CNNECT THEM ACROSS CLASSES)
-            diff *= -1;
-        }
-        forces += diff;
-
-        neighbor = ((n - 1) + c.Count) % c.Count;
-        temp = c[neighbor];
-        diff = temp.position - position;
-        distance = diff.magnitude;
-        diff.Normalize();
-        diff = diff * -1 / (distance*distance);
-        if (distance < 0.5f){ //0.5f == insertDistance / 2 (NEED TO CNNECT THEM ACROSS CLASSES)
-            diff *= -1;
-        }
-        forces += diff;
-        
-
-        forces = forces * k; // similar to spring constant
-        velocity += forces;
-    }
-
-    public void updatePosition(){
-        position += velocity;
-        // Debug.Log(velocity);
-        velocity = velocity * 0.7f;
-    }
-
-    public void display(Vector2 cameraCenter){
-        // TODO: Display COde
-        // spriteRenderer.transform.position = new Vector3(position.x, position.y, 0);
-        spriteRenderer.transform.position = new Vector3(position.x, position.y, 0);
-    }
-}
-
 public class DifferentialGrowth : MonoBehaviour
 {
-    [SerializeField] Sprite circle_sprite;
+    [SerializeField] SimSettings settings;
 
 
-    List<Particle> clump;
-    // int width = 10;
-    // int height = 10;
-
+    public List<Particle> clump;
+    // 99% sure these aren't actually doing anything...
     private const int screenHeight = 1;
     private const int screenWidth = 1;
     private const float pixelsPerUnit = 1f;
     
-    float insertDistance = 1f;
+    private bool needsDisplayUpdate = false;
+    // float insertDistance = 0.5f;
     
     int currPIdx = 0;
+    LineRenderer lineRenderer;
+
+    void InitializeSimulation(){
+
+        // lineRenderer.positionCount = 0;
+        // Initialize LineRenderer
+        InitializeLineRenderer();
+
+        clump = new List<Particle>();
+        int numParticles = settings.initialParticleCount;
+        // At roughly 26:34 in the YT video, he goes into detail about adding a little bit of randomness to the radius, which in turn, drastically introduces chaos into the growth.
+        // Really good description on parameters and initial conditions here too.
+        float radius;
+        if(settings.includeRandomness){
+            radius = settings.initialRadius + UnityEngine.Random.Range(-1.0f, 1.0f);
+        }
+        // float radius = settings.initialRadius + UnityEngine.Random.Range(-1.0f, 1.0f);
+        else{
+            radius = settings.initialRadius;
+        }
+        float angle = 0;
+        for (int i = 0; i < numParticles; i++){
+            
+
+            angle = Mathf.Lerp(0, Mathf.PI * 2, (float) i / numParticles); // map each particle to a particular angle in a circle
+            Vector2 initialPosition = new Vector2(screenWidth/2f + radius * Mathf.Cos(angle), screenHeight/2f + radius * Mathf.Sin(angle));
+            
+            Particle particle = new Particle(initialPosition.x, initialPosition.y, settings);
+            clump.Add(particle);
+
+        }
+    }
+
+    public void ResetSimulation()
+    {
+
+        clump.Clear();
+        lineRenderer.positionCount = 0;
+        InitializeSimulation();
+    }
 
     // Start is called before the first frame update
     void Start()
     {
-        // Adjust the camera settings
-        // SetupCamera();
 
-        clump = new List<Particle>();
-        int numParticles = 4;
-        float radius = 1.0f;
-        float angle = 0;
-        for (int i = 0; i < numParticles; i++){
-            angle = Mathf.Lerp(0, Mathf.PI * 2, (float) i / numParticles); // map each particle to a particular angle in a circle
-            Vector2 initialPosition = new Vector2(screenWidth/2f + radius * Mathf.Cos(angle), screenHeight/2f + radius * Mathf.Sin(angle));
-            
-            Particle particle = new Particle(initialPosition.x, initialPosition.y);
-            clump.Add(particle);
-
-        }
-
+        InitializeSimulation();
+    
         
     }
 
-    void SetupCamera() {
-        Camera mainCamera = Camera.main;
-        if (mainCamera == null) {
-            Debug.LogError("Main Camera is not set in the scene!");
-            return;
-        }
+    void InitializeLineRenderer(){
 
-        // Set orthographic camera size and pixels per unit mapping
-        mainCamera.orthographic = true;
-        mainCamera.orthographicSize = screenHeight / 2f / pixelsPerUnit;
-
-        // Center the camera in the pixel space
-        mainCamera.transform.position = new Vector3(screenWidth / 2f, screenHeight / 2f, -10f);
-    }
-
-    // Update is called once per frame
-    void Update(){
-        
-        Vector2 cameraCenter = Camera.main.transform.position;
-
-        DrawAllParticles(cameraCenter);
-    }
-
-    GameObject DrawLine(Vector2 start, Vector2 end)
-    {
-        // Create a new Line Renderer GameObject
-        GameObject lineGO = new GameObject("Line");
-        LineRenderer lineRenderer = lineGO.AddComponent<LineRenderer>();
-
-        // Configure the Line Renderer
+        GameObject lineGO = new GameObject("ClumpLineRenderer");
+        lineRenderer = lineGO.AddComponent<LineRenderer>();
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        lineRenderer.startColor = Color.white;
-        lineRenderer.endColor = Color.white;
-        lineRenderer.startWidth = 0.025f;
-        lineRenderer.endWidth = 0.025f;
+        lineRenderer.startWidth = 0.05f;
+        lineRenderer.endWidth = 0.05f;
+        lineRenderer.positionCount = 0;
+        lineRenderer.loop = true; // Enable loop for circular rendering
 
-        // Set positions
-        lineRenderer.positionCount = 2;
-        lineRenderer.SetPosition(0, new Vector3(start.x, start.y, 0));
-        lineRenderer.SetPosition(1, new Vector3(end.x, end.y, 0));
-
-        return lineGO; // Return the created line for tracking
+        // Assign the color
+        lineRenderer.startColor = Color.cyan;
+        lineRenderer.endColor = Color.cyan;
     }
 
-    List<GameObject> lines = new List<GameObject>();
+    
+    void FixedUpdate(){
+        
+        if (settings.isSimRunning){
+            Time.fixedDeltaTime = 1 / 30f;
 
-    void DrawAllParticles(Vector2 cameraCenter)
+            if (clump.Count <= 2500){
+                // Debug.Log("Maxed out!");
+                DrawAllParticles();
+            }
+            
+        }
+        
+        
+    }
+
+    void Update(){
+
+        if (settings.isSimRunning){
+            if (clump.Count <= 2500){
+            UpdateAllParticles();
+            }
+          
+        }
+        // Debug.Log(clump.Count);
+    }
+
+
+void UpdateAllParticles(){
+    // Update particles
+    for (int i = 0; i < clump.Count; i++)
     {
-        // Clear previous lines
-        foreach (GameObject line in lines)
-        {
-            Destroy(line);
-        }
-        lines.Clear();
-
-        // Draw new lines
-        for (int i = 0; i < clump.Count; i++)
-        {
-            Particle p = clump[i];
-            Particle p1 = clump[(i + 1) % clump.Count];
-            GameObject lineGO = DrawLine(p.position, p1.position);
-            lines.Add(lineGO);
-        }
-
-        // Update and move particles
-        for (int i = 0; i < clump.Count; i++)
-        {
-            Particle p = clump[i];
-            p.update(clump, i);
-        }
-
-        foreach (Particle p in clump)
-        {
-            p.updatePosition();
-        }
-
-        insert(clump);
+        clump[i].update(clump, i);
     }
+
+    foreach (Particle p in clump)
+    {
+        p.updatePosition();
+    }
+
+    // Insert new particles
+    insert(clump);
+}
+
+
+void DrawAllParticles()
+{
+        // Update LineRenderer positions
+        lineRenderer.positionCount = clump.Count;
+        for (int i = 0; i < clump.Count; i++)
+        {
+            Vector3 pos = new Vector3(clump[i].position.x, clump[i].position.y, 0);
+            lineRenderer.SetPosition(i, pos);
+
+            
+        }
+
+        
+}
     
 void insert(List<Particle> c)
     {
-        int initialCount = c.Count; // Prevent infinite growth
-
-        for (int i = 0; i < initialCount; i++)
+    
+        for (int i = 0; i < c.Count; i++)
         {
             Particle p = c[i];
             Particle p1 = c[(i + 1) % c.Count]; // Circular connection
@@ -220,17 +158,18 @@ void insert(List<Particle> c)
             // Calculate difference vector and distance
             Vector2 diff = p1.position - p.position;
 
-            if (diff.magnitude > insertDistance)
+            if (diff.magnitude > settings.insertDistance)
             {
                 // Calculate midpoint
                 Vector2 midPoint = p.position + (diff * 0.5f);
 
-                Particle newParticle = new Particle(midPoint.x, midPoint.y);
+                Particle newParticle = new Particle(midPoint.x, midPoint.y, settings);
                 c.Insert((i + 1) % c.Count, newParticle);
 
-                // Break to prevent multiple inserts in a single iteration
-                return;
+                
             }
         }
     }
+
+    
 }
