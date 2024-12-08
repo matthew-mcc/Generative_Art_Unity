@@ -10,7 +10,7 @@ public class SimSettings : MonoBehaviour
     public float insertDistance = 0.5f; // Repulsion dist = insert * 5
     // public float repulsionDistance = 2.5f; 
     public float k = 0.0001f;
-    public float velocityDamping = 0.6f;
+    public float velocityDamping = 0.7f;
     public int initialParticleCount = 4;
     public float initialRadius = 1.0f;
     public bool includeRandomness = false;
@@ -41,6 +41,9 @@ public class SimSettings : MonoBehaviour
 
     [SerializeField] Slider kValueSlider;
     [SerializeField] TMP_Text kValueSlider_text;
+
+    [SerializeField] Toggle randomToggle;
+
 
     // NEED TO CHANGE THESE DEFAULT VALUES.
     private int kVal = 5;
@@ -133,6 +136,15 @@ public class SimSettings : MonoBehaviour
 
         Debug.Log($"New k: {k}");
         differentialGrowth.ResetSimulation();
+    }
+
+    public void ChangeRandomNoise(){
+        
+        // Debug.Log(randomToggle.isOn);
+
+        includeRandomness = randomToggle.isOn;
+        differentialGrowth.ResetSimulation();
+
     }
 
 
