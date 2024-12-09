@@ -64,7 +64,7 @@ public class Particle{
         distance = diff.magnitude;
         diff.Normalize();
         diff = diff * (1 / (distance*distance));
-        // if (distance < 0.5f){ //0.5f == insertDistance / 2 (NEED TO CNNECT THEM ACROSS CLASSES)
+        
         if(distance < insertDistance / 2){    
             diff *= -1;
         }
@@ -78,7 +78,6 @@ public class Particle{
         distance = diff.magnitude;
         diff.Normalize();
         diff = diff * (1 / (distance*distance));
-        // if (distance < 0.5f){ //0.5f == insertDistance / 2 (NEED TO CNNECT THEM ACROSS CLASSES)
         if(distance < insertDistance / 2){     
             diff *= -1;
         }
@@ -91,13 +90,12 @@ public class Particle{
 
     public void updatePosition(){
         position += velocity;
-        // Debug.Log(velocity);
+        
         velocity = velocity * velocityDamping;
     }
 
-    public void display(Vector2 cameraCenter){
-        // TODO: Display COde
-        // spriteRenderer.transform.position = new Vector3(position.x, position.y, 0);
+    public void display(){
+        
         spriteRenderer.transform.position = new Vector3(position.x, position.y, 0);
     }
 }

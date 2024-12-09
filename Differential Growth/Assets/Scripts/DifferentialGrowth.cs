@@ -18,33 +18,28 @@ public class DifferentialGrowth : MonoBehaviour
     private const int screenWidth = 1;
     private const float pixelsPerUnit = 1f;
     
-    private bool needsDisplayUpdate = false;
-    // float insertDistance = 0.5f;
     
     int currPIdx = 0;
     LineRenderer lineRenderer;
 
     void InitializeSimulation(){
 
-        // lineRenderer.positionCount = 0;
-        // Initialize LineRenderer
+       
         InitializeLineRenderer();
 
         clump = new List<Particle>();
         int numParticles = settings.initialParticleCount;
-        // At roughly 26:34 in the YT video, he goes into detail about adding a little bit of randomness to the radius, which in turn, drastically introduces chaos into the growth.
-        // Really good description on parameters and initial conditions here too.
+
         float radius;
-        if(settings.includeRandomness){
-            radius = settings.initialRadius + UnityEngine.Random.Range(-1.0f, 1.0f);
-        }
-        // float radius = settings.initialRadius + UnityEngine.Random.Range(-1.0f, 1.0f);
-        else{
-            radius = settings.initialRadius;
-        }
         float angle = 0;
         for (int i = 0; i < numParticles; i++){
+            if(settings.includeRandomness){
+            radius = settings.initialRadius + UnityEngine.Random.Range(-1.0f, 1.0f);
+            }
             
+            else{
+                radius = settings.initialRadius;
+            }
 
             angle = Mathf.Lerp(0, Mathf.PI * 2, (float) i / numParticles); // map each particle to a particular angle in a circle
             Vector2 initialPosition = new Vector2(screenWidth/2f + radius * Mathf.Cos(angle), screenHeight/2f + radius * Mathf.Sin(angle));
