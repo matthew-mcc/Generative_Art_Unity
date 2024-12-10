@@ -51,6 +51,9 @@ public class Simulation_Handler : MonoBehaviour
     public Slider R1Slider;
     public TMP_Text R1Slider_Text;
 
+    // Init Maps
+    public TMP_Dropdown laplacian_inits_dropdown;
+
     // 0 for RD, 1 for L_G
     int currentModel;
 
@@ -93,6 +96,11 @@ public class Simulation_Handler : MonoBehaviour
             rD.SetActive(false);
             // fast_Laplacian.enabled = true;
             fast_Laplacian.SetActive(true);
+        }
+
+        // Keep included.
+        if (Input.GetKeyDown(KeyCode.Space)){
+            PlayPause();
         }
 
         // Mouse Input for Laplacian Growth
@@ -246,6 +254,13 @@ public class Simulation_Handler : MonoBehaviour
      
 
         Debug.Log($"Image Saved to: {outputPath}");
+    }
+
+
+    public void ChangeInitialMap_Laplacian(){
+        int newInitMapMode = laplacian_inits_dropdown.value;
+        fast_Laplacian.GetComponent<Fast_Laplacian>().initialMapMode = newInitMapMode;
+        Regrow();
     }
 
     // ============================== RD Controls ==============================

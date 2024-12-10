@@ -63,7 +63,13 @@ public class Fast_Laplacian : MonoBehaviour
     public Simulation_Handler sim;
     public Vector2Int targetPoint;
 
+    public Texture2D initMap; 
+    public Laplacian_InitMap_Helper initHelper;
+
     public bool followingMouse = false;
+
+    // 0 = center, 1 = random seed, 2 = 20 random points, 3 = square, 4 = triangle, 5 = circle, 6 = cross
+    public int initialMapMode = 0; // 0 = Square, 1 = Triangle, 2 = Circle
 
     public void ResetSimulation(){
         if (renderTexture != null) renderTexture.Release();
@@ -129,31 +135,106 @@ public class Fast_Laplacian : MonoBehaviour
         
     }
 
-    private void InitializeAlgorithm()
-    {
-
-        // INITIALIZE ALGORITHM
+    private void InitializeAlgorithm(){
         aggregateMap = new int[width, height];
-        
-        // int initialSeedX = UnityEngine.Random.Range(0, width);
-        // int initialSeedY = UnityEngine.Random.Range(0, height);
-        
-        int initialSeedX = 200;
-        int initialSeedY = 200;
-
-        aggregateMap[initialSeedX, initialSeedY] = 1; // Initial seed
-
         candidateSites = new Dictionary<Vector2Int, float>();
         pointCharges = new List<Vector2Int>();
 
-        // Add candidates for the initial seed 
-        Dictionary<Vector2Int, float> newCandidateSites = AddCandidateSites(new Vector2Int(initialSeedX, initialSeedY));
-        pointCharges.Add(new Vector2Int(initialSeedX, initialSeedY));
-
-        // Calculate Potentials
-        CalculatePotentials(new List<Vector2Int>(newCandidateSites.Keys));
         
+
+        switch (initialMapMode)
+        {
+            case 0:
+                aggregateMap[200, 200] = 1;
+                break;
+            case 1:
+                int randX = (int) UnityEngine.Random.Range(0, width);
+                int randY = (int) UnityEngine.Random.Range(0, height);
+                aggregateMap[randX, randY] = 1;
+                break;
+
+            case 2: 
+                // i random points
+                for (int i = 0; i < 20; i++){
+                    int x = (int) UnityEngine.Random.Range(0, width);
+                    int y = (int) UnityEngine.Random.Range(0, height);
+                    aggregateMap[x, y] = 1;
+                    
+                }
+                break;
+            case 3:
+                initHelper.DrawSquareOutline(aggregateMap, 150, 150, 100); // Square with top-left corner at (150,150) and side length 100
+                break;
+
+            case 4:
+                initHelper.DrawTriangleOutline(aggregateMap, new Vector2Int(100, 100), new Vector2Int(200, 300), new Vector2Int(300, 100)); // Triangle with vertices
+                break;
+
+            case 5:
+                initHelper.DrawCircleOutline(aggregateMap, 200, 200, 50); // Circle with center at (200,200) and radius 50
+                break;
+            
+            case 6:
+                for(int i = 0; i < width; i++){
+                    aggregateMap[i, 200] = 1;
+                }
+                for (int i = 0; i < height; i++){
+                    aggregateMap[200, i] = 1;
+                }
+                break;
+
+        }
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (aggregateMap[x, y] == 1)
+                {
+                    Dictionary<Vector2Int, float> newCandidateSites = AddCandidateSites(new Vector2Int(x, y));
+                    pointCharges.Add(new Vector2Int(x, y));
+
+                    // Calculate Potentials
+                    CalculatePotentials(new List<Vector2Int>(newCandidateSites.Keys));
+                }
+            }
+        }
     }
+
+
+//     private void InitializeAlgorithm()
+// {
+//     aggregateMap = new int[width, height];
+//     candidateSites = new Dictionary<Vector2Int, float>();
+//     pointCharges = new List<Vector2Int>();
+
+
+//     // Parameters for the square
+//     int startX = 150; // Top-left corner X
+//     int startY = 150; // Top-left corner Y
+//     int sideLength = 100; // Length of the sides
+
+//     // Draw the square outline
+//     DrawSquareOutline(aggregateMap, startX, startY, sideLength);
+
+//     // Initialize candidate sites and potentials
+//     for (int x = 0; x < width; x++)
+//     {
+//         for (int y = 0; y < height; y++)
+//         {
+//             if (aggregateMap[x, y] == 1)
+//             {
+//                 Dictionary<Vector2Int, float> newCandidateSites = AddCandidateSites(new Vector2Int(x, y));
+//                 pointCharges.Add(new Vector2Int(x, y));
+
+//                 // Calculate Potentials
+//                 CalculatePotentials(new List<Vector2Int>(newCandidateSites.Keys));
+//             }
+//         }
+//     }
+// }
+
+
 
     void IterateAlgorithm(){
 
@@ -296,7 +377,7 @@ public class Fast_Laplacian : MonoBehaviour
             
         }
        
-        Debug.Log(phi);
+        // Debug.Log(phi);
         candidateSites[site] = phi; // Store the calculated potential
     }
 }
