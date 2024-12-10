@@ -35,6 +35,14 @@ public class Simulation_Handler : MonoBehaviour
     public Slider diffuseRateBSlider;
     public TMP_Text diffuseRateBSlider_Text;
 
+    // Directional Bias
+    public GameObject rd_directionalBiasControls;
+    public TMP_Dropdown rd_directionalBias_dropdown;
+    public Slider directionalSegmentsSlider;
+    public TMP_Text directionalSegmentsSlider_text;
+    public Slider directionalBiasSlider;
+    public TMP_Text directionalBiasSlider_text;
+
     // Laplacian Specific Controls
     public Slider etaSlider;
     public TMP_Text etaSlider_Text;
@@ -52,6 +60,8 @@ public class Simulation_Handler : MonoBehaviour
         rD.SetActive(true);
         fast_Laplacian.SetActive(false);
         laplacianControls.SetActive(false);
+
+        rd_directionalBiasControls.SetActive(false);
 
         dt = 1 / dtSlider.value;
         Time.fixedDeltaTime = dt;
@@ -282,6 +292,58 @@ public class Simulation_Handler : MonoBehaviour
         
         Regrow();
 
+    }
+
+
+    // DIRECTIONAL BIAS
+    public void ChangeDirectionalBiasMode(){
+        int directionalModel = rd_directionalBias_dropdown.value;
+        rd_directionalBiasControls.SetActive(true);
+        // None
+        if (rd_directionalBias_dropdown.value == 0){
+            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
+
+            rd_directionalBiasControls.SetActive(false);
+
+        }
+        // Linear - horizontal
+        else if (rd_directionalBias_dropdown.value == 1){
+            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
+        }
+        
+        // Linear - vertical
+        else if (rd_directionalBias_dropdown.value == 2){
+            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
+        }
+
+        // Linear - diagonal
+        else if (rd_directionalBias_dropdown.value == 3){
+            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
+        }
+
+        // Radial
+        else if (rd_directionalBias_dropdown.value == 4){
+            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
+        }
+
+        // sinusoidal
+        else if (rd_directionalBias_dropdown.value == 5){
+            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
+        }
+
+        Regrow(); // TBD if I want this or not...
+    }
+    
+    public void ChangeDirectionalBias(){
+        float newDirectionalBias = directionalBiasSlider.value;
+        directionalBiasSlider_text.text = string.Format("Bias: {0:F3}", newDirectionalBias);
+        rD.GetComponent<RD_Simulation>().directionalBias = newDirectionalBias;
+    }
+
+    public void ChangeDirectionalSegments(){
+        int newDirectionalSegments = (int) directionalSegmentsSlider.value;
+        directionalSegmentsSlider_text.text = $"Segments: {newDirectionalSegments}";
+        rD.GetComponent<RD_Simulation>().numDirectionalSegments = newDirectionalSegments;
     }
 
     // ============================== Laplacian Controls ==============================

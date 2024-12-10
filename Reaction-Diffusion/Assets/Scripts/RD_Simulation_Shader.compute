@@ -23,7 +23,9 @@ float diffusionRateA;
 float diffusionRateB;
 
 int colorMode;
-
+int directionalMode;
+int numberDirectionalSegments; // default 20
+float directionalBiasModifier; // default 0.005
 // (1, 0) means we will bias to the right
 // (0, 1) means we will bias downward
 // (1, 1) means we will bias diagonally
@@ -47,6 +49,10 @@ void Start (uint3 id : SV_DispatchThreadID)
     // This works, need to create some initial maps tho...
     float4 initVals = initMap[id.xy];
     currentGrid[id.xy] = float4(1, initVals.r, 0, 0);
+
+    // ============ Testing Random =============
+
+
     // ============ 3 Diagonal Squares =============
 
     // Initialize A, B with default values
@@ -88,7 +94,7 @@ void Start (uint3 id : SV_DispatchThreadID)
     // currentGrid[id.xy] = cell;
     // ============= Single Square =============
     
-    // Initialize A, B with default values
+    // // Initialize A, B with default values
     // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
 
     // // Add a small amount of B for reaction to start
@@ -194,31 +200,102 @@ float CalculateLaplacianB(int2 id) {
 [numthreads(8,8,1)]
 void Update (uint3 id : SV_DispatchThreadID)
 {
-    if (id.x >= width || id.y >= height){
+    if (id.x >= width || id.y >= height) {
         return;
     }
+    
+    float2 gridCenter = float2(width / 2.0, height / 2.0);
+    float2 currentPos = float2(id.x, id.y);
+    
+    // Determine kill rate variation mode
+    // int directionalMode = 2; // 0 = radial, 1 = sine wave, 2 = columns, 3 = normal
+    
+    
+    // int linearMode = 0; // 0 = horizontal, 1 = vertical, 2 = diagonal
+    
+    float varyingKillRate;
+    
+    // None
+    if (directionalMode == 0){
+        varyingKillRate = killRate;
+    }
+    
+    // Linear - horizontal
+    else if (directionalMode == 1){
+        float columnWidth = width / numberDirectionalSegments;
+        varyingKillRate = (fmod(currentPos.y, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
+    }
+    // Linear - vertical
+    else if (directionalMode == 2){
+        float columnWidth = width / numberDirectionalSegments;
+        varyingKillRate = (fmod(currentPos.x, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
+    }
+    // Linear - diagonal
+    else if (directionalMode == 3){
+        float columnWidth = width / numberDirectionalSegments;
+        varyingKillRate = (fmod(currentPos.x + currentPos.y, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
+    }
+    // Radial
+    else if (directionalMode == 4){
+        float distanceFromCenter = length(currentPos - gridCenter);
+        float maxDistance = length(gridCenter);
+        float normalizedDistance = distanceFromCenter / maxDistance;
+        varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, normalizedDistance);
+    }
+    // Sinusoidal
+    else if (directionalMode == 5){
+        varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, 0.5 * (sin(currentPos.x * 0.5) + 1.0)); // Adjust 0.1 for wavelength
+    }
+    // none
+    // if (mode == 0) {
+    //     // Radial gradient
+    //     float distanceFromCenter = length(currentPos - gridCenter);
+    //     float maxDistance = length(gridCenter);
+    //     float normalizedDistance = distanceFromCenter / maxDistance;
+    //     varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, normalizedDistance);
+        
+    // } else if (mode == 1) { // BROKEN!
+    //     // Sine wave variation (horizontal)
+    //     varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, 0.5 * (sin(currentPos.x * 0.5) + 1.0)); // Adjust 0.1 for wavelength
+    // } else if (mode == 2) {
+    //     // Column variation
+    //     float columnWidth = width / numberLines; // Divide grid into 10 columns
+    //     if (linearMode == 0){
+    //         varyingKillRate = (fmod(currentPos.y, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
+    //     }
+    //     else if (linearMode == 1){
+    //         varyingKillRate = (fmod(currentPos.x, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
+    //     }
+    //     else if (linearMode == 2){
+    //         varyingKillRate = (fmod(currentPos.x + currentPos.y, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
+    //     }
 
+    // }
+    // else if (mode == 3){
+    //     varyingKillRate = killRate;
+    // }
+    
+    // Get current A, B values
     float2 currentValues = currentGrid[id.xy].xy;
     float a = currentValues.x;
     float b = currentValues.y;
-
+    
     // Calculate Laplacians for A and B
     float laplacianA = CalculateLaplacianA(id.xy);
     float laplacianB = CalculateLaplacianB(id.xy);
-
-    // Gray-Scott reaction-diffusion equations
+    
+    // Gray-Scott reaction-diffusion equations with varying kill rate
     float reaction = a * b * b;
     float diffA = (diffusionRateA * laplacianA - reaction + feedRate * (1.0 - a));
-    float diffB = (diffusionRateB * laplacianB + reaction - (killRate + feedRate) * b);
-
+    float diffB = (diffusionRateB * laplacianB + reaction - (varyingKillRate + feedRate) * b);
+    
     // Update concentrations
     float newA = a + diffA;
     float newB = b + diffB;
     
-    // Testing out colors
-
-    nextGrid[id.xy] = float4(max(0, newA), min(newB, 1), diffA, diffB); // Update next grid state
-
+    // Update next grid state
+    nextGrid[id.xy] = float4(max(0, newA), min(newB, 1), diffA, diffB);
+    
     // float2 diffuseStrength = 0;
 
     // float2 sum = 0;
