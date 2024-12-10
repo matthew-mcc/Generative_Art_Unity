@@ -61,6 +61,9 @@ public class Fast_Laplacian : MonoBehaviour
     bool needsDisplayUpdate = true;
     // Simulation Controls
     public Simulation_Handler sim;
+    public Vector2Int targetPoint;
+
+    public bool followingMouse = false;
 
     public void ResetSimulation(){
         if (renderTexture != null) renderTexture.Release();
@@ -83,6 +86,8 @@ public class Fast_Laplacian : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        targetPoint = new Vector2Int();
         InitializeAlgorithm();
         InitializeComputeShader();
 
@@ -246,26 +251,55 @@ public class Fast_Laplacian : MonoBehaviour
     // Eqn 3 or 10, based on paper version.
     // φ_i = sum_{n, j=0}{1 - (R_1 / r_i,j)}
     private void CalculatePotentials(List<Vector2Int> keys)
+{
+    foreach (var site in keys) // this is i
     {
-        
-        foreach (var site in keys) // this is i
+        float phi = 0;
+
+        foreach (var charge in pointCharges)
         {
-            float phi = 0;
-
-            foreach (var charge in pointCharges){
-                float r = Vector2Int.Distance(site, charge);
-                if (r > 0){
-                    phi+= (1 - R1 / r);
-                }
+            float r = Vector2Int.Distance(site, charge);
+            if (r > 0)
+            {
+                phi += (1 - R1 / r);
             }
-
-            // === This sorta works ===
-            // float directionalBias = Mathf.Lerp(0.5f, 1.5f, (float)site.x / width); // Bias grows toward the right
-            // phi *= directionalBias; // Amplify potential based on bias
-
-            candidateSites[site] = phi;
         }
+
+        // This works really well, let's see if we can connect it to a particular point instead of just linear / horizontal
+        // Add a vertical directional bias
+
+
+        // RIGHT BIAS
+        // float rightBias = Mathf.Lerp(0.5f, 15f, (float)site.x / width); // Right bias
+        // phi *= rightBias; // Amplify potential based on bias
+
+
+        // if (followingMouse){
+            
+        // }
+        // Must have a way to make this more pronounced...
+        // candidateSites[site] = phi;
+        // Vector2Int targetPoint = new Vector2Int(0, 0); // 0, 0 is bottom left of the grid
+        // Add directional bias toward the target point
+        float distanceToTarget = Vector2Int.Distance(site, targetPoint);
+        // Debug.Log(distanceToTarget); 
+        float maxDistance = Mathf.Sqrt(width * width + height * height);
+        
+        float directionalBias = distanceToTarget / maxDistance;
+
+        // Debug.Log($"Distance to Target: {distanceToTarget}");
+        // Calculate bias using an inverse-distance weighting (closer to target = higher bias)
+        // float directionalBias = Mathf.Lerp(50f, 10900f, distanceToTarget / maxDistance); // Adjustable weights
+        if (distanceToTarget > 0){
+            // phi /= directionalBias; // Amplify potential based on distance to target point
+            phi += (1 / directionalBias) * 5;
+            
+        }
+       
+        Debug.Log(phi);
+        candidateSites[site] = phi; // Store the calculated potential
     }
+}
 
    
     // Update is called once per frame
@@ -289,10 +323,13 @@ public class Fast_Laplacian : MonoBehaviour
     }
 
     void Update(){
+        
         if (needsDisplayUpdate){
             UpdateTexture();
             needsDisplayUpdate = false;
         }
+
+        
     }
 
 

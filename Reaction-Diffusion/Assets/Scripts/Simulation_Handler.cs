@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using System;
+// using System.Numerics;
+using Unity.VisualScripting;
 
 public class Simulation_Handler : MonoBehaviour
 {
@@ -93,7 +95,53 @@ public class Simulation_Handler : MonoBehaviour
             fast_Laplacian.SetActive(true);
         }
 
+        // Mouse Input for Laplacian Growth
+        // Vector3 mousePos = Input.mousePosition;
+        // Debug.Log(mousePos);
+        
+        // This gets me a position from -5 to 5 in both axes.
+        Camera mainCam = Camera.main;
+        Vector2 mousePos = Input.mousePosition;
 
+        Vector3 testPoint = mainCam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, mainCam.nearClipPlane));
+        // Debug.Log(testPoint);
+
+        Vector2Int test = GetGridIndex(testPoint);
+        // Debug.Log(test);
+        fast_Laplacian.GetComponent<Fast_Laplacian>().targetPoint = test;
+    }
+
+    private static float MapRange(float value, float inMin, float inMax, float outMin, float outMax)
+    {
+        return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
+    }
+
+    Vector2Int GetGridIndex(Vector3 worldPos){
+        Vector2Int gridPoint = new Vector2Int();
+
+        if (worldPos.x > 5 || worldPos.x < -5 || worldPos.y > 5 || worldPos.y < -5){
+            // Debug.Log("Out of bounds!");
+            gridPoint.x = 0;
+            gridPoint.y = 0;
+            
+        }
+        else{
+            // Debug.Log("In bounds!");
+            int height = fast_Laplacian.GetComponent<Fast_Laplacian>().height;
+            int width = fast_Laplacian.GetComponent<Fast_Laplacian>().width;
+
+            float x = MapRange(worldPos.x, -5, 5, 0, width);
+            float y = MapRange(worldPos.y, -5, 5, 0, height);
+            
+            gridPoint.x = (int)x;
+            gridPoint.y = (int)y;
+
+
+        }
+
+
+
+        return gridPoint;
     }
 
 
