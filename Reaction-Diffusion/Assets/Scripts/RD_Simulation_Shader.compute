@@ -1,7 +1,6 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel Start
 #pragma kernel Update
-
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 
@@ -26,14 +25,12 @@ int colorMode;
 int directionalMode;
 int numberDirectionalSegments; // default 20
 float directionalBiasModifier; // default 0.005
-// (1, 0) means we will bias to the right
-// (0, 1) means we will bias downward
-// (1, 1) means we will bias diagonally
 
-// 0 Means no orientation change
-// 1 --> (1, 0)
-// 2 --> (0, 1)
-// 3 --> (1, 1)
+
+// 0 = square, 1 = circle, 2 = 3 squares, 3 = line, 4 = triangle
+int initialMapMode;
+
+
 int orientationDirection = 0; 
 float2 diffusionDirection = float2(1, 1);
 
@@ -47,88 +44,110 @@ void Start (uint3 id : SV_DispatchThreadID)
     }
 
     // This works, need to create some initial maps tho...
-    float4 initVals = initMap[id.xy];
-    currentGrid[id.xy] = float4(1, initVals.r, 0, 0);
-
-    // ============ Testing Random =============
-
-
-    // ============ 3 Diagonal Squares =============
-
-    // Initialize A, B with default values
-    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
-
-    // // Define multiple reaction-diffusion points
-    // int2 centers[3] = { int2(width / 2, height / 2), int2(width / 4, height / 4), int2(3 * width / 4, 3 * height / 4) };
-    // int regionSize = 5;
-
-    // // Check each region for initialization of B concentration
-    // for (int i = 0; i < 3; i++) {
-    //     int centerX = centers[i].x;
-    //     int centerY = centers[i].y;
-    //     if ((id.x > centerX - regionSize && id.x < centerX + regionSize) &&
-    //         (id.y > centerY - regionSize && id.y < centerY + regionSize)) {
-    //         cell.y = 1.0;  // Initialize B for reaction
-    //         break;         // Exit once one region is assigned
-    //     }
-    // }
-
-    // currentGrid[id.xy] = cell;
-
-    // ============= Single Circle =============
-    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
-
-    // // Add a small amount of B for reaction to start
-    // float centerX = width / 2.0; // Ensure floating-point division
-    // float centerY = height / 2.0; // Ensure floating-point division
-    // float radius = 15.0;
-
-    // float dx = id.x - centerX; // id.x and id.y need to be treated as floats
-    // float dy = id.y - centerY;
-
-    // // Check if the cell is within the circle
-    // if ((dx * dx) + (dy * dy) < (radius * radius)) {
-    //     cell.y = 1.0;
-    // }
-
-    // currentGrid[id.xy] = cell;
-    // ============= Single Square =============
+    // float4 initVals = initMap[id.xy];
+    // currentGrid[id.xy] = float4(1, initVals.r, 0, 0);
     
-    // // Initialize A, B with default values
-    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
+    float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
 
-    // // Add a small amount of B for reaction to start
-    // int centerX = width / 2;
-    // int centerY = height / 2;
+    // initialMapMode = 4;
 
-    // if ((id.x > centerX - 15 && id.x < centerX + 15) && (id.y > centerY - 15 && id.y < centerY + 15)) {
-    //     cell.y = 1.0;
-    // }
+    // Single Square
+    if (initialMapMode == 0){
+        // Add a small amount of B for reaction to start
+        int centerX = width / 2;
+        int centerY = height / 2;
 
-    // currentGrid[id.xy] = cell;
+        if ((id.x > centerX - 15 && id.x < centerX + 15) && (id.y > centerY - 15 && id.y < centerY + 15)) {
+            cell.y = 1.0;
+        }
+
+        currentGrid[id.xy] = cell;
+    }
+
+    // Single Circle
+    if (initialMapMode == 1){
+        // Add a small amount of B for reaction to start
+        float centerX = width / 2.0; // Ensure floating-point division
+        float centerY = height / 2.0; // Ensure floating-point division
+        float radius = 15.0;
+
+        float dx = id.x - centerX; // id.x and id.y need to be treated as floats
+        float dy = id.y - centerY;
+
+        // Check if the cell is within the circle
+        if ((dx * dx) + (dy * dy) < (radius * radius)) {
+            cell.y = 1.0;
+        }
+
+        currentGrid[id.xy] = cell;
+    }
+
+    // 3 diagonal squares
+    if (initialMapMode == 2){
+        // Define 3 initial squares
+        int2 centers[3] = { int2(width / 2, height / 2), int2(width / 4, height / 4), int2(3 * width / 4, 3 * height / 4) };
+        int regionSize = 5;
+
+        // Check each region for initialization of B concentration
+        for (int i = 0; i < 3; i++) {
+            int centerX = centers[i].x;
+            int centerY = centers[i].y;
+            if ((id.x > centerX - regionSize && id.x < centerX + regionSize) &&
+                (id.y > centerY - regionSize && id.y < centerY + regionSize)) {
+                cell.y = 1.0;  // Initialize B for reaction
+                break;         // Exit once one region is assigned
+            }
+        }
+
+        currentGrid[id.xy] = cell;
+    }
+
+    // line
+    if(initialMapMode == 3){
+        int centerX = width / 2;
+        int centerY = height / 2;
+
+        if ((id.x > centerX - 15 && id.x < centerX + 15) && (id.y > centerY - 200 && id.y < centerY + 200)) {
+            cell.y = 1.0;
+        }
+
+        currentGrid[id.xy] = cell;
+    }
+
+    // Triangle
+    if (initialMapMode == 4) {
+        // Define the triangle vertices
+        float2 center = float2(width / 2.0, height / 2.0);
+        
+        float2 v0_original = float2(width / 2.0, 3.0 * height / 4.0);      // Top vertex
+        float2 v1_original = float2(width / 4.0, height / 4.0); // Bottom-left vertex
+        float2 v2_original = float2(3.0 * width / 4.0, height / 4.0); // Bottom-right vertex
+
+        // Apply scaling factor to make the triangle smaller
+        float scale = 0.25; // Scale factor (0.0 to 1.0, where 1.0 is original size)
+        float2 v0 = lerp(center, v0_original, scale);
+        float2 v1 = lerp(center, v1_original, scale);
+        float2 v2 = lerp(center, v2_original, scale);
+
+        // Calculate barycentric coordinates for point-in-triangle test
+        float2 p = float2(id.x, id.y);
+        float area = abs((v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y)); // Total triangle area
+        float area1 = abs((v1.x - p.x) * (v2.y - p.y) - (v2.x - p.x) * (v1.y - p.y));   // Sub-triangle 1
+        float area2 = abs((v2.x - p.x) * (v0.y - p.y) - (v0.x - p.x) * (v2.y - p.y));   // Sub-triangle 2
+        float area3 = abs((v0.x - p.x) * (v1.y - p.y) - (v1.x - p.x) * (v0.y - p.y));   // Sub-triangle 3
+
+        // Check if point is within the triangle
+        if (abs(area - (area1 + area2 + area3)) < 1e-5) {
+            cell.y = 1.0;  // Initialize B for reaction
+        }
+
+        currentGrid[id.xy] = cell;
+    }
+
+    return;
+
     
 
-    // ============ Triangle ============
-    
-    // Initialize cell with A = 1.0 and B = 0.0
-    // float4 cell = float4(1.0, 0.0, 0.0, 0.0); // float4(A, B, 0, 0)
-
-    // // Define center and radius for the circle
-    // int centerX = width / 2;
-    // int centerY = height / 2;
-    // float radius = 15.0; // Radius of the circle
-
-    // // Calculate distance from the center
-    // float distance = length(float2(id.x - centerX, id.y - centerY));
-
-    // // Check if the current pixel is within the circle's radius
-    // if (distance < radius) {
-    //     cell.y = 1.0; // Set B to 1.0 inside the circle
-    // }
-
-    // // Store the cell in the current grid
-    // currentGrid[id.xy] = cell;
-    
 }
 
 float CalculateLaplacianA(int2 id) {
@@ -207,12 +226,6 @@ void Update (uint3 id : SV_DispatchThreadID)
     float2 gridCenter = float2(width / 2.0, height / 2.0);
     float2 currentPos = float2(id.x, id.y);
     
-    // Determine kill rate variation mode
-    // int directionalMode = 2; // 0 = radial, 1 = sine wave, 2 = columns, 3 = normal
-    
-    
-    // int linearMode = 0; // 0 = horizontal, 1 = vertical, 2 = diagonal
-    
     float varyingKillRate;
     
     // None
@@ -246,34 +259,7 @@ void Update (uint3 id : SV_DispatchThreadID)
     else if (directionalMode == 5){
         varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, 0.5 * (sin(currentPos.x * 0.5) + 1.0)); // Adjust 0.1 for wavelength
     }
-    // none
-    // if (mode == 0) {
-    //     // Radial gradient
-    //     float distanceFromCenter = length(currentPos - gridCenter);
-    //     float maxDistance = length(gridCenter);
-    //     float normalizedDistance = distanceFromCenter / maxDistance;
-    //     varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, normalizedDistance);
-        
-    // } else if (mode == 1) { // BROKEN!
-    //     // Sine wave variation (horizontal)
-    //     varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, 0.5 * (sin(currentPos.x * 0.5) + 1.0)); // Adjust 0.1 for wavelength
-    // } else if (mode == 2) {
-    //     // Column variation
-    //     float columnWidth = width / numberLines; // Divide grid into 10 columns
-    //     if (linearMode == 0){
-    //         varyingKillRate = (fmod(currentPos.y, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
-    //     }
-    //     else if (linearMode == 1){
-    //         varyingKillRate = (fmod(currentPos.x, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
-    //     }
-    //     else if (linearMode == 2){
-    //         varyingKillRate = (fmod(currentPos.x + currentPos.y, columnWidth) < (columnWidth / 2.0)) ? killRate : killRate + directionalBiasModifier;
-    //     }
 
-    // }
-    // else if (mode == 3){
-    //     varyingKillRate = killRate;
-    // }
     
     // Get current A, B values
     float2 currentValues = currentGrid[id.xy].xy;
@@ -296,40 +282,7 @@ void Update (uint3 id : SV_DispatchThreadID)
     // Update next grid state
     nextGrid[id.xy] = float4(max(0, newA), min(newB, 1), diffA, diffB);
     
-    // float2 diffuseStrength = 0;
-
-    // float2 sum = 0;
-    // float weightSum;
-    // int diffuseRadius = 6;
-    // for(int offsetY = -diffuseRadius; offsetY <= diffuseRadius; offsetY ++ ){
-    //     for (int offsetX = -diffuseRadius; offsetX <= diffuseRadius; offsetX ++){
-    //         if (offsetX == 0 && offsetY == 0){
-    //             continue;
-    //         }
-    //         int2 samplePos = id.xy + int2(offsetX, offsetY);
-    //         samplePos = min(int2(width-1, height-1), max(0, samplePos));
-    //         float sqrDst = offsetX * offsetX * offsetY * offsetY;
-
-    //         if (sqrDst <= diffuseRadius * diffuseRadius){
-    //             float weight = 1.0 / sqrt(sqrDst);
-    //             sum += currentGrid[samplePos].xy * weight;
-    //             weightSum += weight;
-    //         }
-    //     }
-    // }
-
-    // diffuseStrength = sum / weightSum - currentValues;
-
-    // float deltaA = (diffusionRateA * diffuseStrength.x - a * b * b + feedRate * (1-a));
-	// float newA = a + deltaA;
-
-	// float deltaB = (diffusionRateB * diffuseStrength.y + a * b * b - (killRate + feedRate) * b);
-	// float newB = b + deltaB;
-
-    // nextGrid[id.xy] = float4(max(0, newA), min(newB, 1), deltaA, deltaB); // Update next grid state
-
     
-
     float colorA = nextGrid[id.xy].x;
     float colorB = nextGrid[id.xy].y;
     float colorW = nextGrid[id.xy].w;
@@ -337,7 +290,7 @@ void Update (uint3 id : SV_DispatchThreadID)
     
     // Standard
     if (colorMode == 0){
-        displayGrid[id.xy] = nextGrid[id.xy];
+        displayGrid[id.xy] = currentGrid[id.xy];
     }
 
     // Black and White
@@ -360,9 +313,4 @@ void Update (uint3 id : SV_DispatchThreadID)
         col = min(1, max(0, col));
         displayGrid[id.xy] = col;
     }
-
-    // displayGrid[id.xy] = nextGrid[id.xy];   // Write to output for visualization
-    
-
-    
 }

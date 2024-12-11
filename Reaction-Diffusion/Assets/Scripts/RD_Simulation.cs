@@ -33,6 +33,8 @@ public class RD_Simulation : MonoBehaviour
     public int numDirectionalSegments = 20;
     public float directionalBias = 0.005f;
 
+    // 0 = square, 1 = circle, 2 = 3 squares, 3 = line, 4 = triangle
+    public int initialConcentrationMap = 0;
     // Simulation Control things
 
     public Simulation_Handler sim;
@@ -63,6 +65,8 @@ public class RD_Simulation : MonoBehaviour
         computeShader.SetTexture(0, "nextGrid", nextGrid);
         computeShader.SetTexture(0, "displayGrid", displayGrid);
         computeShader.SetTexture(0, "initMap", initMap);
+
+        computeShader.SetInt("initialMapMode", initialConcentrationMap);
 
         // Reapply initial shader parameters and dispatch the compute shader to reset
         UpdateShaderParameters();
@@ -110,6 +114,8 @@ public class RD_Simulation : MonoBehaviour
         computeShader.SetTexture(0, "initMap", initMap);
         computeShader.SetInt("orientationDirection", orientationDirection);
 
+        computeShader.SetInt("initialMapMode", initialConcentrationMap);
+
 
         // Directional Bias
         computeShader.SetInt("directionalMode", directionalMode);
@@ -136,6 +142,8 @@ public class RD_Simulation : MonoBehaviour
         computeShader.SetInt("directionalMode", directionalMode);
         computeShader.SetInt("numberDirectionalSegments", numDirectionalSegments);
         computeShader.SetFloat("directionalBiasModifier", directionalBias);
+        computeShader.SetInt("colorMode", colorMode);
+        computeShader.SetInt("initialMapMode", initialConcentrationMap);
     }
     
     void Simulate(){

@@ -9,33 +9,7 @@ public class Fast_Laplacian : MonoBehaviour
 {
 
 
-    /*
-        1. Check how you're updating the texture.
-        2. Memory allocation.
-            2.2 Check how many memory allocations.
-            2.3 Work by reference as much as possible.
-            2.4 Use a debugger!
-        3. Select n candidate sites at once, where n could be scaled as you have more and more sites. 
-            3.1 Could parallelize
-            3.2 Only do this at large sites
-            3.3 Could change the appearance of the pattern
-        4. Localize the candidate site and checking a small volume around it.
-            4.1 Would 100% affect the emergent characer, might be more interesting though!
-        5. Can parallize some things (updating candidate sites, among others)
-        6. LIMIT FPS, DOESNT LAG AT 30!
-
-
-        Efficiency Notes:
-        1. A decent balance seems to be 400x400 grid, running at 30 fps
-            1.1 Alternatively, 256x256 running at 45 fps (fills more of the grid!)
-
-        === Other ===
-
-        1. Let's cap (and make a slider) for R1 between 0.5 and 5 (default 0.5)
-        2. Let's cap (and make a slider) for eta between 1 and 10 (default 5)
-
-    */
-
+    
     // private Texture2D displayTexture;
 
     public RenderTexture renderTexture; 
@@ -65,6 +39,8 @@ public class Fast_Laplacian : MonoBehaviour
 
     public Texture2D initMap; 
     public Laplacian_InitMap_Helper initHelper;
+
+    public int colorMode = 0;
 
     public bool followingMouse = false;
 
@@ -124,7 +100,7 @@ public class Fast_Laplacian : MonoBehaviour
         computeShader.SetVector("colorB", new Vector4(1f, 0f, 0f, 1f)); // Red
         computeShader.SetVector("colorA", new Vector4(1f, 1f, 0f, 1f)); // Yellow
 
-
+        computeShader.SetInt("colorMode", colorMode);
         computeShader.SetFloat("colorW", 0.5f);
         computeShader.SetFloat("colorZ", 0.2f);
         

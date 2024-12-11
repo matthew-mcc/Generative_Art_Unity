@@ -53,7 +53,11 @@ public class Simulation_Handler : MonoBehaviour
 
     // Init Maps
     public TMP_Dropdown laplacian_inits_dropdown;
+    public TMP_Dropdown rd_inits_dropdown;
 
+    // Color Modes
+    public TMP_Dropdown rd_colors_dropdown;
+    public TMP_Dropdown laplacian_colors_dropdown;
     // 0 for RD, 1 for L_G
     int currentModel;
 
@@ -257,12 +261,7 @@ public class Simulation_Handler : MonoBehaviour
     }
 
 
-    public void ChangeInitialMap_Laplacian(){
-        int newInitMapMode = laplacian_inits_dropdown.value;
-        fast_Laplacian.GetComponent<Fast_Laplacian>().initialMapMode = newInitMapMode;
-        Regrow();
-    }
-
+    
     // ============================== RD Controls ==============================
 
     public void ChangeFeedRate(){
@@ -362,6 +361,7 @@ public class Simulation_Handler : MonoBehaviour
     public void ChangeDirectionalBiasMode(){
         int directionalModel = rd_directionalBias_dropdown.value;
         rd_directionalBiasControls.SetActive(true);
+
         // None
         if (rd_directionalBias_dropdown.value == 0){
             rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
@@ -369,32 +369,11 @@ public class Simulation_Handler : MonoBehaviour
             rd_directionalBiasControls.SetActive(false);
 
         }
-        // Linear - horizontal
-        else if (rd_directionalBias_dropdown.value == 1){
-            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
-        }
-        
-        // Linear - vertical
-        else if (rd_directionalBias_dropdown.value == 2){
+        else{
             rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
         }
 
-        // Linear - diagonal
-        else if (rd_directionalBias_dropdown.value == 3){
-            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
-        }
-
-        // Radial
-        else if (rd_directionalBias_dropdown.value == 4){
-            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
-        }
-
-        // sinusoidal
-        else if (rd_directionalBias_dropdown.value == 5){
-            rD.GetComponent<RD_Simulation>().directionalMode = directionalModel;
-        }
-
-        Regrow(); // TBD if I want this or not...
+        // Regrow(); 
     }
     
     public void ChangeDirectionalBias(){
@@ -407,6 +386,18 @@ public class Simulation_Handler : MonoBehaviour
         int newDirectionalSegments = (int) directionalSegmentsSlider.value;
         directionalSegmentsSlider_text.text = $"Segments: {newDirectionalSegments}";
         rD.GetComponent<RD_Simulation>().numDirectionalSegments = newDirectionalSegments;
+    }
+
+    public void ChangeInitialMap_RD(){
+        int newInitMapMode = rd_inits_dropdown.value;
+        rD.GetComponent<RD_Simulation>().initialConcentrationMap = newInitMapMode;
+        Regrow();
+    }
+
+    public void ChaneColorMode_RD(){
+        int newColorMode = rd_colors_dropdown.value;
+        rD.GetComponent<RD_Simulation>().colorMode = newColorMode;
+        // Regrow();
     }
 
     // ============================== Laplacian Controls ==============================
@@ -426,6 +417,51 @@ public class Simulation_Handler : MonoBehaviour
 
         fast_Laplacian.GetComponent<Fast_Laplacian>().R1 = newR1;
 
+        Regrow();
+    }
+
+    public void ChangeInitialMap_Laplacian(){
+        int newInitMapMode = laplacian_inits_dropdown.value;
+        fast_Laplacian.GetComponent<Fast_Laplacian>().initialMapMode = newInitMapMode;
+        Regrow();
+    }
+
+    public void ResetParams_Laplacian(){
+        // Reset value, slider and texts
+        float defaultEta = 5.0f;
+        float defaultR1 = 0.5f;
+
+        // eta
+        fast_Laplacian.GetComponent<Fast_Laplacian>().eta = defaultEta;
+        etaSlider.value = defaultEta;
+        etaSlider_Text.text = string.Format("eta: {0:F3}", defaultEta);
+
+        // R1
+        fast_Laplacian.GetComponent<Fast_Laplacian>().R1 = defaultR1;
+        R1Slider.value = defaultR1;
+        R1Slider_Text.text = string.Format("R1: {0:F3}", defaultR1);
+        
+        Regrow();
+    }
+
+    public void RandomizeParams_Laplacian(){
+        float randomEta = UnityEngine.Random.Range(etaSlider.minValue, etaSlider.maxValue);
+        float randomR1 = UnityEngine.Random.Range(R1Slider.minValue, R1Slider.maxValue);
+
+        fast_Laplacian.GetComponent<Fast_Laplacian>().eta = randomEta;
+        etaSlider.value = randomEta;
+        etaSlider_Text.text = string.Format("eta: {0:F3}", randomEta);
+
+        fast_Laplacian.GetComponent<Fast_Laplacian>().R1 = randomR1;
+        R1Slider.value = randomR1;
+        R1Slider_Text.text = string.Format("R1: {0:F3}", randomR1);
+
+        Regrow();
+    }
+    
+    public void ChangeColorMode_laplacian(){
+        int newColorMode = laplacian_colors_dropdown.value;
+        fast_Laplacian.GetComponent<Fast_Laplacian>().colorMode = newColorMode;
         Regrow();
     }
 
