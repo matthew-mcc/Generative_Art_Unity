@@ -50,6 +50,7 @@ public class Simulation_Handler : MonoBehaviour
     public TMP_Text etaSlider_Text;
     public Slider R1Slider;
     public TMP_Text R1Slider_Text;
+    public TMP_Text followMouse_Text;
 
     // Init Maps
     public TMP_Dropdown laplacian_inits_dropdown;
@@ -121,6 +122,8 @@ public class Simulation_Handler : MonoBehaviour
         Vector2Int test = GetGridIndex(testPoint);
         // Debug.Log(test);
         fast_Laplacian.GetComponent<Fast_Laplacian>().targetPoint = test;
+
+        UpdateFollowMouseText();
     }
 
     private static float MapRange(float value, float inMin, float inMax, float outMin, float outMax)
@@ -463,6 +466,17 @@ public class Simulation_Handler : MonoBehaviour
         int newColorMode = laplacian_colors_dropdown.value;
         fast_Laplacian.GetComponent<Fast_Laplacian>().colorMode = newColorMode;
         Regrow();
+    }
+
+    public void UpdateFollowMouseText(){
+        bool isFollowing = fast_Laplacian.GetComponent<Fast_Laplacian>().followingMouse;
+
+        if (isFollowing){
+            followMouse_Text.text = "Following Mouse: True";
+        }
+        else{
+            followMouse_Text.text = "Following Mouse: False";
+        }
     }
 
     
