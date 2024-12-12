@@ -334,18 +334,13 @@ public class Fast_Laplacian : MonoBehaviour
 
         if (followingMouse){
             // Must have a way to make this more pronounced...
-            // candidateSites[site] = phi;
-            // Vector2Int targetPoint = new Vector2Int(0, 0); // 0, 0 is bottom left of the grid
             // Add directional bias toward the target point
             float distanceToTarget = Vector2Int.Distance(site, targetPoint);
             // Debug.Log(distanceToTarget); 
             float maxDistance = Mathf.Sqrt(width * width + height * height);
             
             float directionalBias = distanceToTarget / maxDistance;
-
-            // Debug.Log($"Distance to Target: {distanceToTarget}");
-            // Calculate bias using an inverse-distance weighting (closer to target = higher bias)
-            // float directionalBias = Mathf.Lerp(50f, 10900f, distanceToTarget / maxDistance); // Adjustable weights
+            
             if (distanceToTarget > 0){
                 // phi /= directionalBias; // Amplify potential based on distance to target point
                 phi += (1 / directionalBias) * 5;
