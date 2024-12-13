@@ -21,6 +21,7 @@ public class Simulation_Handler : MonoBehaviour
     public TMP_Text dtSliderText;
     public GameObject rdControls;
     public GameObject laplacianControls;
+    [SerializeField] TMP_Text fpsText;
 
     // "Panels"
     public GameObject fast_Laplacian;
@@ -94,8 +95,18 @@ public class Simulation_Handler : MonoBehaviour
 
     }
 
+    private void Update(){
+        if (1/Time.deltaTime >= 60){
+            fpsText.text = $"FPS: 60";
+        }
+        else{
+            fpsText.text = $"FPS: {1/Time.deltaTime:F0}"; 
+        }
+        
+    }
     private void FixedUpdate() {
 
+        
 
         if (isSimulationRunning){
             playPause.GetComponentInChildren<TMP_Text>().text = "Pause";
@@ -104,13 +115,16 @@ public class Simulation_Handler : MonoBehaviour
             playPause.GetComponentInChildren<TMP_Text>().text = "Play";
         }
 
-
+        
         // Reaction Diffusion
         if(currentModel == 0){
             // rD.enabled = true;
             // fast_Laplacian.enabled = false;
             rD.SetActive(true);
             fast_Laplacian.SetActive(false);
+            dtSlider.minValue = 30;
+            dtSlider.maxValue = 480;
+            
         }
 
         else if (currentModel == 1){
@@ -118,6 +132,8 @@ public class Simulation_Handler : MonoBehaviour
             rD.SetActive(false);
             // fast_Laplacian.enabled = true;
             fast_Laplacian.SetActive(true);
+            dtSlider.minValue = 10;
+            dtSlider.maxValue = 60;
         }
 
         // Keep included.
@@ -194,8 +210,9 @@ public class Simulation_Handler : MonoBehaviour
 
     public void ChangeDeltaTime(){
         float newDt = dtSlider.value;
-        dtSliderText.text = string.Format("FPS: {0}", (int)newDt);
+        dtSliderText.text = string.Format("dt (1/value): {0}", (int)newDt);
         Time.fixedDeltaTime = 1 / newDt;
+        
     }
 
     public void Regrow(){
@@ -228,6 +245,8 @@ public class Simulation_Handler : MonoBehaviour
             isSimulationRunning = false;
             rdControls.SetActive(true);
             laplacianControls.SetActive(false);
+            dtSlider.value = 60f;
+            dtSliderText.text = string.Format("dt (1/value): {0}", (int)30f);
 
         }
         else if (currentModel == 1){
@@ -236,7 +255,7 @@ public class Simulation_Handler : MonoBehaviour
             rdControls.SetActive(false);
             laplacianControls.SetActive(true);
             dtSlider.value = 30f;
-            dtSliderText.text = string.Format("FPS: {0}", (int)30f);
+            dtSliderText.text = string.Format("dt (1/value): {0}", (int)30f);
         }
         
 
