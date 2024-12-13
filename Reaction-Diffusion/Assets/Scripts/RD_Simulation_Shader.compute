@@ -57,7 +57,7 @@ void Start (uint3 id : SV_DispatchThreadID)
         // Add a small amount of B for reaction to start
         int centerX = width / 2;
         int centerY = height / 2;
-        int sideLength = 50;
+        int sideLength = 15;
         if ((id.x > centerX - sideLength && id.x < centerX + sideLength) && (id.y > centerY - sideLength && id.y < centerY + sideLength)) {
             cell.y = 1.0;
         }
@@ -224,7 +224,7 @@ void Update (uint3 id : SV_DispatchThreadID)
     // Reaction-diffusion equations
     float dA = diffusionRateA * laplaceA - a * b * b + feedRate * (1.0 - a);
     float newA = a + dA;
-    float dB = diffusionRateB * laplaceB + a * b * b - (feedRate + killRate) * b;
+    float dB = diffusionRateB * laplaceB + a * b * b - (feedRate + varyingKillRate) * b;
     float newB = b + dB;
 
 
