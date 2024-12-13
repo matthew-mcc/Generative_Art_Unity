@@ -257,7 +257,9 @@ void Update (uint3 id : SV_DispatchThreadID)
     }
     // Sinusoidal
     else if (directionalMode == 5){
-        varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, 0.5 * (sin(currentPos.x * 0.5) + 1.0)); // Adjust 0.1 for wavelength
+        float wavelength = width / 10.0;
+        varyingKillRate = lerp(killRate, killRate + directionalBiasModifier, 0.5 * (sin(currentPos.x * (2.0 * 3.14159 / wavelength)) + 1.0));
+
     }
 
     

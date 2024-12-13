@@ -59,8 +59,14 @@ public class Simulation_Handler : MonoBehaviour
     // Color Modes
     public TMP_Dropdown rd_colors_dropdown;
     public TMP_Dropdown laplacian_colors_dropdown;
+    public TMP_Dropdown laplacian_color1_dropdown;
+    public TMP_Dropdown laplacian_color2_dropdown;
+    public GameObject laplacian_color_pickers;
     // 0 for RD, 1 for L_G
     int currentModel;
+
+    List<Color> colors = new List<Color>(){Color.black, Color.blue, Color.cyan, Color.gray, Color.green, Color.grey, Color.magenta, Color.red, Color.white, Color.yellow};
+    List<String> colorNames = new List<String>(){"Black", "Blue", "Cyan", "Gray", "Green", "Grey", "Pink", "Red", "White", "Yellow"};
 
     float dt;
 
@@ -75,6 +81,17 @@ public class Simulation_Handler : MonoBehaviour
 
         dt = 1 / dtSlider.value;
         Time.fixedDeltaTime = dt;
+
+        // laplacian_color1_dropdown
+        laplacian_color1_dropdown.ClearOptions();
+        laplacian_color2_dropdown.ClearOptions();
+
+        laplacian_color1_dropdown.AddOptions(colorNames);
+        laplacian_color2_dropdown.AddOptions(colorNames);
+
+        laplacian_color1_dropdown.value = 9;
+        laplacian_color2_dropdown.value = 7;
+
     }
 
     private void FixedUpdate() {
@@ -465,6 +482,16 @@ public class Simulation_Handler : MonoBehaviour
     public void ChangeColorMode_laplacian(){
         int newColorMode = laplacian_colors_dropdown.value;
         fast_Laplacian.GetComponent<Fast_Laplacian>().colorMode = newColorMode;
+
+        if (newColorMode == 2){
+            laplacian_color_pickers.SetActive(true);
+        }
+        else{
+            laplacian_color_pickers.SetActive(false);
+
+        }
+
+
         Regrow();
     }
 
@@ -477,6 +504,20 @@ public class Simulation_Handler : MonoBehaviour
         else{
             followMouse_Text.text = "Following Mouse: False";
         }
+    }
+
+    public void UpdateColor1(int index){
+        int colorIndex = laplacian_color1_dropdown.value;
+        Color color1 = colors[colorIndex];
+        fast_Laplacian.GetComponent<Fast_Laplacian>().computeShader.SetVector("colorA", color1);
+        // Regrow();
+    }
+    
+    public void UpdateColor2(int index){
+
+        int colorIndex = laplacian_color2_dropdown.value;
+        Color color2 = colors[colorIndex];
+        fast_Laplacian.GetComponent<Fast_Laplacian>().computeShader.SetVector("colorB", color2);
     }
 
     

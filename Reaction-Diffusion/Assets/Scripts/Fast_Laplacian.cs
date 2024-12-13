@@ -73,7 +73,9 @@ public class Fast_Laplacian : MonoBehaviour
         targetPoint = new Vector2Int();
         InitializeAlgorithm();
         InitializeComputeShader();
-
+        computeShader.SetVector("colorB", new Vector4(1f, 0f, 0f, 1f)); // Red
+        // computeShader.SetVector("colorB", Color.magenta); // Red
+        computeShader.SetVector("colorA", new Vector4(1f, 1f, 0f, 1f)); // Yellow
         var material = transform.GetComponentInChildren<MeshRenderer>().material;
         material.mainTexture = renderTexture;
 
@@ -98,8 +100,9 @@ public class Fast_Laplacian : MonoBehaviour
         // computeShader.SetVector("colorB", new Vector4(0f, 0f, 1f, 1f)); // Example blue
         // computeShader.SetVector("colorA", new Vector4(0.5f, 0f, 0.5f, 1f)); // Purple
         // computeShader.SetVector("colorB", new Vector4(0f, 1f, 0f, 1f));     // Green
-        computeShader.SetVector("colorB", new Vector4(1f, 0f, 0f, 1f)); // Red
-        computeShader.SetVector("colorA", new Vector4(1f, 1f, 0f, 1f)); // Yellow
+        // computeShader.SetVector("colorB", new Vector4(1f, 0f, 0f, 1f)); // Red
+        // // computeShader.SetVector("colorB", Color.magenta); // Red
+        // computeShader.SetVector("colorA", new Vector4(1f, 1f, 0f, 1f)); // Yellow
 
         computeShader.SetInt("colorMode", colorMode);
         computeShader.SetFloat("colorW", 0.5f);
@@ -128,6 +131,8 @@ public class Fast_Laplacian : MonoBehaviour
                 int randX = (int) UnityEngine.Random.Range(0, width);
                 int randY = (int) UnityEngine.Random.Range(0, height);
                 aggregateMap[randX, randY] = 1;
+                computeShader.SetInt("seedX", randX);
+                computeShader.SetInt("seedY", randY);
                 break;
 
             case 2: 
