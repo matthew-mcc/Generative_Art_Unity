@@ -96,13 +96,6 @@ public class Fast_Laplacian : MonoBehaviour
 
         computeShader.SetInt("seedX", seedX);
         computeShader.SetInt("seedY", seedY);
-        // computeShader.SetVector("colorA", new Vector4(1f, 0f, 0f, 1f)); // Example red
-        // computeShader.SetVector("colorB", new Vector4(0f, 0f, 1f, 1f)); // Example blue
-        // computeShader.SetVector("colorA", new Vector4(0.5f, 0f, 0.5f, 1f)); // Purple
-        // computeShader.SetVector("colorB", new Vector4(0f, 1f, 0f, 1f));     // Green
-        // computeShader.SetVector("colorB", new Vector4(1f, 0f, 0f, 1f)); // Red
-        // // computeShader.SetVector("colorB", Color.magenta); // Red
-        // computeShader.SetVector("colorA", new Vector4(1f, 1f, 0f, 1f)); // Yellow
 
         computeShader.SetInt("colorMode", colorMode);
         computeShader.SetFloat("colorW", 0.5f);
@@ -127,6 +120,7 @@ public class Fast_Laplacian : MonoBehaviour
             case 0:
                 aggregateMap[200, 200] = 1;
                 break;
+            
             case 1:
                 int randX = (int) UnityEngine.Random.Range(0, width);
                 int randY = (int) UnityEngine.Random.Range(0, height);
@@ -184,38 +178,6 @@ public class Fast_Laplacian : MonoBehaviour
     }
 
 
-//     private void InitializeAlgorithm()
-// {
-//     aggregateMap = new int[width, height];
-//     candidateSites = new Dictionary<Vector2Int, float>();
-//     pointCharges = new List<Vector2Int>();
-
-
-//     // Parameters for the square
-//     int startX = 150; // Top-left corner X
-//     int startY = 150; // Top-left corner Y
-//     int sideLength = 100; // Length of the sides
-
-//     // Draw the square outline
-//     DrawSquareOutline(aggregateMap, startX, startY, sideLength);
-
-//     // Initialize candidate sites and potentials
-//     for (int x = 0; x < width; x++)
-//     {
-//         for (int y = 0; y < height; y++)
-//         {
-//             if (aggregateMap[x, y] == 1)
-//             {
-//                 Dictionary<Vector2Int, float> newCandidateSites = AddCandidateSites(new Vector2Int(x, y));
-//                 pointCharges.Add(new Vector2Int(x, y));
-
-//                 // Calculate Potentials
-//                 CalculatePotentials(new List<Vector2Int>(newCandidateSites.Keys));
-//             }
-//         }
-//     }
-// }
-
 
 
     void IterateAlgorithm(){
@@ -271,13 +233,13 @@ public class Fast_Laplacian : MonoBehaviour
         var candidateSite = candidateSites.Keys.First();
 
 
-        // Step 2: Calculate normalized potentials Φ_i and their powers (Φ_i^eta), and sum them up
+        // Step 2: Calculate normalized potentials phi i and their powers (phi i ^eta), and sum them up
         Dictionary<Vector2Int, float> weightedPotentials = new Dictionary<Vector2Int, float>();
         float totalWeightedPotential = 0;
         
         foreach (var site in candidateSites)
         {
-            // Normalize Φ_i = (φ_i - φ_min) / (φ_max - φ_min)
+            // Normalize phi
             float normalizedPhi = (site.Value - minPhi) / (maxPhi - minPhi);
             float weightedPotential = Mathf.Pow(normalizedPhi, eta);
             

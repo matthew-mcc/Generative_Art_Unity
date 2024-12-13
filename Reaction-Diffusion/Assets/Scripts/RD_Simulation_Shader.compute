@@ -145,6 +145,56 @@ void Start (uint3 id : SV_DispatchThreadID)
         currentGrid[id.xy] = cell;
     }
 
+    /*
+    // Define 3 initial squares
+        int2 centers[3] = { int2(width / 2, height / 2), int2(width / 4, height / 4), int2(3 * width / 4, 3 * height / 4) };
+        int regionSize = 5;
+
+        // Check each region for initialization of B concentration
+        for (int i = 0; i < 3; i++) {
+            int centerX = centers[i].x;
+            int centerY = centers[i].y;
+            if ((id.x > centerX - regionSize && id.x < centerX + regionSize) &&
+                (id.y > centerY - regionSize && id.y < centerY + regionSize)) {
+                cell.y = 1.0;  // Initialize B for reaction
+                break;         // Exit once one region is assigned
+            }
+        }
+
+        currentGrid[id.xy] = cell;
+    */
+
+    // 15 random points
+    if (initialMapMode == 5){
+        // Define constants for pseudo-random number generation
+        int regionSize = 2; // Size of each region
+        int numPoints = 15; // Number of random points
+        int2 randomPoints[15];
+
+        // Generate pseudo-random points
+        for (int i = 0; i < numPoints; i++) {
+            uint seedX = (i + 1) * 73856093; // Use a unique multiplier for each point
+            uint seedY = (i + 1) * 19349663; // Use a unique multiplier for each point
+            randomPoints[i] = int2(
+                (seedX % width), // Generate pseudo-random X
+                (seedY % height) // Generate pseudo-random Y
+            );
+        }
+
+        // Check each random point for initialization of B concentration
+        for (int i = 0; i < numPoints; i++) {
+            int centerX = randomPoints[i].x;
+            int centerY = randomPoints[i].y;
+            if ((id.x > centerX - regionSize && id.x < centerX + regionSize) &&
+                (id.y > centerY - regionSize && id.y < centerY + regionSize)) {
+                cell.y = 1.0; // Initialize B for reaction
+                break;        // Exit once one region is assigned
+            }
+        }
+
+        currentGrid[id.xy] = cell;
+    }
+
     return;
 
     
@@ -248,9 +298,11 @@ void Display (uint3 id : SV_DispatchThreadID){
     float colorW = nextGrid[id.xy].w;
     float colorZ = nextGrid[id.xy].z;
     
+    const float colorZThreshold = 0.0005;
+    colorZ = max(0, colorZ - colorZThreshold);
     // Standard
     if (colorMode == 0){
-        displayGrid[id.xy] = currentGrid[id.xy];
+        displayGrid[id.xy] =  m;
     }
 
     // Black and White
@@ -262,7 +314,7 @@ void Display (uint3 id : SV_DispatchThreadID){
     else if (colorMode == 2){
         float v = colorA - colorB;
 
-        displayGrid[id.xy] = (1 - pow(abs(1 - (v + 1 - max(colorW, colorZ) * 350)), 0.6)) + float4(colorW, 0, 0, 0) * 400;
+        displayGrid[id.xy] = (1 - pow(abs(1 - (v + 1 - max(colorZ, colorW) * 350)), 0.15)) + float4(colorW, 0, 0, 0) * 750;
     }
 
     // Sebastian Lague Color 2.0
@@ -272,5 +324,31 @@ void Display (uint3 id : SV_DispatchThreadID){
         col.g = pow(col.g, 2) * 6;
         col = min(1, max(0, col));
         displayGrid[id.xy] = col;
+    }
+
+    // Fiery glow mode
+    else if (colorMode == 4){
+        float intensity = colorA - colorB; 
+        float glow = saturate(colorW * 6.0 + colorZ * 3.0);
+
+        // Map intensity to a fiery palette (red, orange, yellow)
+        float red = saturate(intensity * 20 + glow * 5);
+        float green = saturate(intensity * 0.8 + glow * 0.5);
+        float blue = saturate(glow * 0.2);
+            
+        displayGrid[id.xy] = float4(red, green, blue, 1.0);
+    }
+
+    // Ice Mode
+    else if (colorMode == 5){
+        float intensity = colorA - colorB; // Base intensity for contrast
+        float glow = saturate(colorW * 100.0 + colorZ * 100.0); // Amplify W and Z for brightness
+
+        float red = saturate(intensity * 0.5 + glow * 0.9);
+        float green = saturate(intensity * 0.3 + glow * 0.6);
+        float blue = saturate(glow * 5);
+
+        // Add sharp contrast for the "electric" look
+        displayGrid[id.xy] = pow(float4(red, green, blue, 2.0), float4(1, 0.2, 0, 1.0));
     }
 }

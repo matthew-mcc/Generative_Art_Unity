@@ -57,6 +57,10 @@ public class Simulation_Handler : MonoBehaviour
     public TMP_Dropdown laplacian_inits_dropdown;
     public TMP_Dropdown rd_inits_dropdown;
 
+    // Presets
+    public TMP_Dropdown rd_presets_dropdown;
+    public TMP_Dropdown laplacian_presets_dropdown;
+
     // Color Modes
     public TMP_Dropdown rd_colors_dropdown;
     public TMP_Dropdown laplacian_colors_dropdown;
@@ -65,6 +69,7 @@ public class Simulation_Handler : MonoBehaviour
     public GameObject laplacian_color_pickers;
     // 0 for RD, 1 for L_G
     int currentModel;
+    
 
     List<Color> colors = new List<Color>(){Color.black, Color.blue, Color.cyan, Color.gray, Color.green, Color.grey, Color.magenta, Color.red, Color.white, Color.yellow};
     List<String> colorNames = new List<String>(){"Black", "Blue", "Cyan", "Gray", "Green", "Grey", "Pink", "Red", "White", "Yellow"};
@@ -337,10 +342,10 @@ public class Simulation_Handler : MonoBehaviour
 
     public void ResetParams(){
         // Reset value, slider and texts
-        float defaultFeedRate = 0.0325f;
+        float defaultFeedRate = 0.0367f;
         float defaultKillRate = 0.062f;
         float defaultDiffusionRateA = 1.0f;
-        float defaultDiffusionRateB = 0.4f;
+        float defaultDiffusionRateB = 0.5f;
         // Feed Rate
         rD.GetComponent<RD_Simulation>().feedRate = defaultFeedRate;
         feedRateSlider.value = defaultFeedRate;
@@ -363,6 +368,78 @@ public class Simulation_Handler : MonoBehaviour
         
         Regrow();
       
+    }
+
+    
+
+    public void ChangePresetRD(){
+        int preset = rd_presets_dropdown.value;
+
+        float newFeedRate = 0.0f;
+        float newKillRate = 0.0f;
+        int newColorMode = 0;
+        int newInitialMap = 0;
+
+        switch (preset){
+            // Meiosis
+            case 0:
+                newFeedRate = 0.0367f;
+                newKillRate = 0.0620f;
+                newInitialMap = 0;
+                newColorMode = 1;
+                break;  
+            // Maze
+            case 1:
+                newFeedRate = 0.022f;
+                newKillRate = 0.0505f;
+                newInitialMap = 0;
+                newColorMode = 0; 
+                break;
+            // Spatial Chaos 
+            case 2:
+                newFeedRate = 0.0101f;
+                newKillRate = 0.0416f;
+                newInitialMap = 1;
+                newColorMode = 3;
+                break;
+            // Sustained SPirals
+            case 3:
+                newFeedRate = 0.0142f;
+                newKillRate = 0.0474f;
+                newInitialMap = 4;
+                newColorMode = 2;
+                break;
+            // Worm
+            case 4:
+                newFeedRate = 0.05f;
+                newKillRate = 0.063f;
+                newInitialMap = 5;
+                newColorMode = 0;
+                break;
+            // waves on ocean
+            case 5:
+                newFeedRate = 0.0136f;
+                newKillRate = 0.0390f;
+                newInitialMap = 1;
+                newColorMode = 2;
+                break;
+        }
+
+        rD.GetComponent<RD_Simulation>().initialConcentrationMap = newInitialMap;
+        rD.GetComponent<RD_Simulation>().colorMode = newColorMode;
+        rD.GetComponent<RD_Simulation>().killRate = newKillRate;
+        rD.GetComponent<RD_Simulation>().feedRate = newFeedRate;
+        
+        killRateSlider.value = newKillRate;
+        killRateSlider_Text.text = string.Format("Kill Rate: {0:F4}", newKillRate);
+
+        feedRateSlider.value = newFeedRate;
+        feedRateSlider_Text.text = string.Format("Feed Rate: {0:F4}", newFeedRate);
+
+        rd_inits_dropdown.value = newInitialMap;
+        rd_colors_dropdown.value = newColorMode;
+        Regrow();
+
     }
 
     public void RandomizeParams(){
@@ -537,6 +614,64 @@ public class Simulation_Handler : MonoBehaviour
         int colorIndex = laplacian_color2_dropdown.value;
         Color color2 = colors[colorIndex];
         fast_Laplacian.GetComponent<Fast_Laplacian>().computeShader.SetVector("colorB", color2);
+    }
+
+    public void ChangePresetLaplacian(){
+        int preset = laplacian_presets_dropdown.value;
+
+        float newEta = 0f;
+        float newR1 = 0f;
+        int newInitialMap = 0;
+        int newColorMode = 0;
+
+        int newColorA = 0;
+        int newColorB = 0;
+
+        switch (preset){
+            case 0:
+                newEta = 6.8f;
+                newR1 = 4.0f;
+                newColorMode = 0;
+                newInitialMap = 1;
+                break;
+            case 1:
+                newEta = 10f;
+                newR1 = 2f;
+                newInitialMap = 0;
+                newColorMode = 2;
+                newColorA = 3;
+                newColorB = 3;
+
+                break;
+            case 2:
+                newEta = 2f;
+                newR1 = 0.5f;
+                newInitialMap = 5;
+                newColorMode = 2;
+                newColorA = 4;
+                newColorB = 4;
+
+                break;
+        }
+
+        fast_Laplacian.GetComponent<Fast_Laplacian>().eta = newEta;
+        fast_Laplacian.GetComponent<Fast_Laplacian>().R1 = newR1;
+        fast_Laplacian.GetComponent<Fast_Laplacian>().colorMode = newColorMode;
+        fast_Laplacian.GetComponent<Fast_Laplacian>().initialMapMode = newInitialMap;
+        fast_Laplacian.GetComponent<Fast_Laplacian>().computeShader.SetVector("colorA", colors[newColorA]);
+        fast_Laplacian.GetComponent<Fast_Laplacian>().computeShader.SetVector("colorB", colors[newColorB]);
+
+        etaSlider.value = newEta;
+        etaSlider_Text.text = string.Format("eta: {0:F3}", newEta);
+        R1Slider.value = newR1;
+        R1Slider_Text.text = string.Format("R1: {0:F3}", newR1);
+
+        laplacian_inits_dropdown.value = newInitialMap;
+        laplacian_colors_dropdown.value = newColorMode;
+        laplacian_color1_dropdown.value = newColorA;
+        laplacian_color2_dropdown.value = newColorB;
+        Regrow();
+
     }
 
     
