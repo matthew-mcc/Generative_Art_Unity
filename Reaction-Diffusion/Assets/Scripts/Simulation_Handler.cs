@@ -618,7 +618,7 @@ public class Simulation_Handler : MonoBehaviour
 
     public void ChangePresetLaplacian(){
         int preset = laplacian_presets_dropdown.value;
-
+        
         float newEta = 0f;
         float newR1 = 0f;
         int newInitialMap = 0;
