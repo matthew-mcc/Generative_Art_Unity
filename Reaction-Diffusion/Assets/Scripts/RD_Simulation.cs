@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Experimental.Rendering;
+using ComputeShaderUtility;
+
 
 public class RD_Simulation : MonoBehaviour
 {
@@ -38,31 +41,22 @@ public class RD_Simulation : MonoBehaviour
     // Simulation Control things
 
     public Simulation_Handler sim;
+    // public ComputeHelper 
+    public FilterMode filterMode = FilterMode.Point;
+	public GraphicsFormat format = ComputeHelper.defaultGraphicsFormat;
 
     public void ResetSimulation(){
-        // Clear the current grid and next grid by reinitializing them
-        if (currentGrid != null) currentGrid.Release();
-        if (nextGrid != null) nextGrid.Release();
-        if (displayGrid != null) displayGrid.Release();
 
-        currentGrid = new RenderTexture(width, height, 24);
-        currentGrid.enableRandomWrite = true;
-        currentGrid.Create();
-
-        nextGrid = new RenderTexture(width, height, 24);
-        nextGrid.enableRandomWrite = true;
-        nextGrid.Create();
-
-        displayGrid = new RenderTexture(width, height, 24);
-        displayGrid.enableRandomWrite = true;
-        displayGrid.Create();   
+        ComputeHelper.CreateRenderTexture(ref currentGrid, width, height, filterMode, format, "currentGrid");
+		ComputeHelper.CreateRenderTexture(ref nextGrid, width, height, filterMode, format, "nextGrid");
+		ComputeHelper.CreateRenderTexture(ref displayGrid, width, height, filterMode, format, "displayGrid");
 
         var material = transform.GetComponentInChildren<MeshRenderer>().material;
         material.mainTexture = displayGrid;
 
         // Reset compute shader textures to the newly created grids
         computeShader.SetTexture(0, "currentGrid", currentGrid);
-        computeShader.SetTexture(0, "nextGrid", nextGrid);
+        // computeShader.SetTexture(0, "nextGrid", nextGrid);
         computeShader.SetTexture(0, "displayGrid", displayGrid);
         computeShader.SetTexture(0, "initMap", initMap);
 
@@ -89,18 +83,10 @@ public class RD_Simulation : MonoBehaviour
 
     void Initialize(){
 
-        // renderTexture = display
-        displayGrid = new RenderTexture(width, height, 24);
-        displayGrid.enableRandomWrite = true;
-        displayGrid.Create();   
+        ComputeHelper.CreateRenderTexture(ref currentGrid, width, height, filterMode, format, "currentGrid");
+		ComputeHelper.CreateRenderTexture(ref nextGrid, width, height, filterMode, format, "nextGrid");
+		ComputeHelper.CreateRenderTexture(ref displayGrid, width, height, filterMode, format, "displayGrid");
 
-        currentGrid = new RenderTexture(width, height, 24);
-        currentGrid.enableRandomWrite = true;
-        currentGrid.Create();
-
-        nextGrid = new RenderTexture(width, height, 24);
-        nextGrid.enableRandomWrite = true;
-        nextGrid.Create();
 
         computeShader.SetInt("width", width);
         computeShader.SetInt("height", height);
@@ -108,10 +94,10 @@ public class RD_Simulation : MonoBehaviour
         // Color mode
         computeShader.SetInt("colorMode", colorMode);
 
-        computeShader.SetTexture(0, "displayGrid", displayGrid);  
+        // computeShader.SetTexture(0, "displayGrid", displayGrid);  
         computeShader.SetTexture(0, "currentGrid", currentGrid);
-        computeShader.SetTexture(0, "nextGrid", nextGrid);
-        computeShader.SetTexture(0, "initMap", initMap);
+        // computeShader.SetTexture(0, "nextGrid", nextGrid);
+        // computeShader.SetTexture(0, "initMap", initMap);
         computeShader.SetInt("orientationDirection", orientationDirection);
 
         computeShader.SetInt("initialMapMode", initialConcentrationMap);
@@ -122,16 +108,17 @@ public class RD_Simulation : MonoBehaviour
         computeShader.SetInt("numberDirectionalSegments", numDirectionalSegments);
         computeShader.SetFloat("directionalBiasModifier", directionalBias);
         computeShader.Dispatch(0, width / 8, height / 8, 1);
+        // ComputeHelper.Dispatch(computeShader, width, height, 1, 0);
 
         
 
-        UpdateShaderParameters();
+        // UpdateShaderParameters();
     }
 
  
 
     public void UpdateShaderParameters(){
-        computeShader.SetFloat("deltaTime", deltaTime);
+        // computeShader.SetFloat("deltaTime", deltaTime);
         computeShader.SetFloat("feedRate", feedRate);
         computeShader.SetFloat("killRate", killRate);
         computeShader.SetFloat("diffusionRateA", diffusionRateA);
@@ -147,22 +134,26 @@ public class RD_Simulation : MonoBehaviour
     }
     
     void Simulate(){
-        computeShader.SetFloat("deltaTime", Time.fixedDeltaTime);
+        // computeShader.SetFloat("deltaTime", Time.fixedDeltaTime);
         computeShader.SetTexture(1, "currentGrid", currentGrid);
         computeShader.SetTexture(1, "nextGrid", nextGrid);
-        computeShader.SetTexture(1, "displayGrid", displayGrid);
+        // computeShader.SetTexture(1, "displayGrid", currentGrid);
 
         UpdateShaderParameters();
 
         computeShader.Dispatch(1, width / 8, height / 8, 1);
+        // ComputeHelper.Dispatch(computeShader, width, height, 1, 1);
 
-        Graphics.Blit(nextGrid, currentGrid);
+        // Graphics.Blit(nextGrid, currentGrid);
+        ComputeHelper.CopyRenderTexture(nextGrid, currentGrid);
     }
 
     void Display(){
-        computeShader.SetTexture(1, "currentGrid", currentGrid);
-        computeShader.SetTexture(1, "displayGrid", displayGrid);
-        computeShader.Dispatch(1, width/8, height/8, 1);
+        computeShader.SetTexture(2, "currentGrid", currentGrid);
+        computeShader.SetTexture(2, "displayGrid", displayGrid);
+        computeShader.SetTexture(2, "nextGrid", nextGrid);
+        computeShader.Dispatch(2, width, height, 1);
+        // ComputeHelper.Dispatch(computeShader, width, height, 1, 2);
         
     }
     
