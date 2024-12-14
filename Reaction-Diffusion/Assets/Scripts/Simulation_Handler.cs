@@ -7,6 +7,7 @@ using TMPro;
 using System;
 // using System.Numerics;
 using Unity.VisualScripting;
+using System.IO;
 
 public class Simulation_Handler : MonoBehaviour
 {
@@ -275,8 +276,13 @@ public class Simulation_Handler : MonoBehaviour
         }
 
         DateTime dt = DateTime.Now;
-        string outputPath = "Output_Images/" + dt.ToString("yyyy-MM-dd_HH-mm-ss");
-        
+
+        string directoryPath = Path.Combine(Application.persistentDataPath, "data/Output_Images");
+        if(!Directory.Exists(directoryPath)){
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        string outputPath = Path.Combine(directoryPath, dt.ToString("yyyy-MM-dd_HH-mm-ss"));
 
         RenderTexture rt = rD.GetComponent<RD_Simulation>().displayGrid; // Default to RD so unity doesn't complain
 
@@ -298,7 +304,7 @@ public class Simulation_Handler : MonoBehaviour
 
         byte[] bytes;
         bytes = tex.EncodeToPNG();
-        System.IO.File.WriteAllBytes(outputPath, bytes);
+        File.WriteAllBytes(outputPath, bytes);
      
 
         Debug.Log($"Image Saved to: {outputPath}");
