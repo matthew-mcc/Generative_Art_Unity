@@ -264,17 +264,14 @@ public class Fast_Laplacian : MonoBehaviour
             }
         }
 
-        // If no site was selected due to rounding errors, return a random candidate
-        
         candidateSites.Remove(candidateSites.Keys.First());
-        // return candidateSites.Keys.First();
+        
         return candidateSite;
     }
     
 
 
     // Eqn 3 or 10, based on paper version.
-    // φ_i = sum_{n, j=0}{1 - (R_1 / r_i,j)}
     private void CalculatePotentials(List<Vector2Int> keys)
 {
     foreach (var site in keys) // this is i

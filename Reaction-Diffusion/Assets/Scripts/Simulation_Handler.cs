@@ -414,7 +414,7 @@ public class Simulation_Handler : MonoBehaviour
                 newFeedRate = 0.05f;
                 newKillRate = 0.063f;
                 newInitialMap = 5;
-                newColorMode = 0;
+                newColorMode = 1;
                 break;
             // waves on ocean
             case 5:
@@ -618,7 +618,7 @@ public class Simulation_Handler : MonoBehaviour
 
     public void ChangePresetLaplacian(){
         int preset = laplacian_presets_dropdown.value;
-        
+
         float newEta = 0f;
         float newR1 = 0f;
         int newInitialMap = 0;
@@ -675,11 +675,6 @@ public class Simulation_Handler : MonoBehaviour
     }
 
     
-    
-
-
-
-
     
 
 }
