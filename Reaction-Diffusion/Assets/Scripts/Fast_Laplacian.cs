@@ -206,18 +206,16 @@ public class Fast_Laplacian : MonoBehaviour
 
     private void UpdatePotentials(Vector2Int newGrowthSite)
     {
-        foreach (var site in candidateSites.Keys.ToList()) // Create a list of keys to avoid modifying during iteration
+        foreach (var site in candidateSites.Keys.ToList()) 
         {
             // Calculate the distance from the new growth site to the candidate site
             float distance = Vector2Int.Distance(newGrowthSite, site);
 
             if (distance > 0)
             {
-                // Calculate the additional potential contribution using (1 - R1 / r)
+                // potential
                 float potentialContribution = 1 - (R1 / distance);
-
-                // Update the potential at the candidate site using φ_i^{t+1} = φ_i^t + (1 - R1 / r)
-                
+                // Update the potentials
                 candidateSites[site] += potentialContribution;
                 
             }
@@ -247,7 +245,7 @@ public class Fast_Laplacian : MonoBehaviour
             totalWeightedPotential += weightedPotential;
         }
 
-        // Step 3: Generate a random value for weighted selection, scaled by the total weighted potential
+        // Step 3: Generate a random value for weighted selection, scaled by the total weighted potential 
         float randomValue = UnityEngine.Random.value * totalWeightedPotential;
         float cumulative = 0;
 
@@ -360,7 +358,7 @@ public class Fast_Laplacian : MonoBehaviour
 
     private void UpdateTexture(){
 
-        // This is likely the issue...
+        // This is likely an optimization issue...
         for (int x = 0; x < width; x++){
             for (int y = 0; y < height; y++){
                 aggregateMap1D[y * width + x] = aggregateMap[x, y];
